@@ -10,6 +10,33 @@
 
 **Spec:** `CAB-BOOKING-SYSTEM.md` (bản trích từ PDF) + `final_PROJECT_grading-factor.extracted.txt` (121 test case). Master plan này bổ sung thiết kế cho phần tài liệu chưa mô tả đủ (mục "Thiết kế bổ sung").
 
+---
+
+## ⭐ ĐIỂM VÀO THỰC THI (đọc trước tiên — dành cho Codex/executor)
+
+Master plan này là **bản điều phối**. Công việc code thực tế nằm trong **2 sub-plan** ở mục 5. Để thực hiện goal "hoàn thành dự án", executor PHẢI:
+
+1. Thực thi **tuần tự** theo thứ tự phase (mục 4): `Backend T1 → T2..T8 → (T9..T13 song song với Frontend F1..F10) → T14..T18`.
+2. Với MỖI task trong 2 file sub-plan (`2026-08-25-backend-completion.md` và `2026-08-25-frontend-rebuild.md`): làm **đúng từng Step theo thứ tự** (TDD: viết test fail → implement tối thiểu → test pass), rồi **commit** như Step commit của task đó. Không gộp nhiều task vào 1 commit.
+3. Không coi master plan là đã xong khi chưa hoàn thành hết task của CẢ HAI sub-plan. Checklist "xong" ở mục 6.
+4. Khi một task đụng file/endpoint chưa rõ, đọc file nguồn được chỉ đích danh trong task đó trước khi code — KHÔNG bịa endpoint/field.
+
+### Quy tắc khởi động Docker tiết kiệm tài nguyên (bắt buộc tuân thủ)
+
+Máy dev là laptop — **KHÔNG up full stack khi không cần**. `depends_on` trong compose đã được rút gọn nên `docker compose up -d <service>` sẽ tự kéo theo đúng dependency (mongodb/redis/kafka) của service đó.
+
+- **Task code/test một service** → chỉ khởi động service đó + dependency:
+  `docker compose -f infra/docker-compose/docker-compose.local.yml up -d --build <service-name>`
+  Ví dụ task T2 (review) → `up -d review-service`; T4 (payment) → `up -d payment-service`.
+- **Unit test** (phần lớn T2–T13) → mock DB/broker, **không cần** container nào; chạy `node --test` / `pytest` trực tiếp.
+- **Task AI cần profile ai** (T10–T13) → thêm service AI cụ thể: `--profile ai up -d matching-service` (không up cả nhóm ai nếu chỉ cần 1).
+- **CHỈ up full stack** cho các task integration/tải/bảo mật/E2E: **T1 (smoke), T8, T14, T15, T16, T17, T18, F9, F10**. Khi đó: `up -d` (core) hoặc `--profile ai up -d` (kèm AI) theo yêu cầu task.
+- Xong task nặng → `docker compose ... stop` các service không dùng tiếp để giải phóng RAM.
+
+Đây là "hạn chế", không phải cấm: task nào bản chất cần nhiều service (integration/E2E) thì vẫn up đủ.
+
+---
+
 ## Global Constraints
 
 - KHÔNG dùng Google Maps / Mapbox ở bất kỳ đâu. Bản đồ frontend: **Leaflet + OpenStreetMap tiles**. Routing/geocoding: **OSRM public API** + **Nominatim**, fallback **Haversine**.
