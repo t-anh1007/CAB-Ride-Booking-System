@@ -249,7 +249,7 @@ services:
       - "3107"
     depends_on:
       mongodb:
-        condition: service_started
+        condition: service_healthy
       kafka:
         condition: service_started
       redis:
@@ -341,6 +341,12 @@ services:
       - "27017"
     ports:
       - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     volumes:
       - cab_mongodb_data:/data/db
       - ../../database_test/booking-seed.js:/docker-entrypoint-initdb.d/booking-seed.js:ro
