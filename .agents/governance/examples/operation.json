@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "id": "OP-EXAMPLE-001",
+  "packet_id": "PKT-EXAMPLE-001",
+  "worker_id": "worker",
+  "lease_id": "COPY_FROM_ISSUED_LEASE",
+  "changes": [{
+    "path": ".agents/governance/examples/example-target.txt",
+    "before_sha256": "9160d4be34c8695bd172a76c7c7966587ea5a4d991ad22c87b2b91af54aa9ebb",
+    "splices": [{ "offset": 0, "delete_bytes": 7, "insert_base64": "YWZ0ZXIK" }]
+  }]
+}

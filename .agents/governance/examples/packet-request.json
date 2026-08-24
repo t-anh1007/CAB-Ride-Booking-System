@@ -1,0 +1,13 @@
+{
+  "id": "PKT-EXAMPLE-001",
+  "goal": "Change the governed example target from before to after",
+  "acceptance_criteria": ["The target contains exactly after followed by a newline"],
+  "owner_id": "owner",
+  "coordinator_id": "coordinator",
+  "worker_id": "worker",
+  "execution_complexity": "EASY",
+  "assurance_risk": "LOW",
+  "requested_runtime": { "model": "luna", "reasoning": "medium", "enforced": false },
+  "exact_paths": [{ "path": ".agents/governance/examples/example-target.txt", "creation_allowed": false }],
+  "expires_at": "2099-12-31T23:59:59.000Z"
+}

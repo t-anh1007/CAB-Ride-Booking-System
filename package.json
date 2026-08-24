@@ -27,7 +27,9 @@
     "inspect:ai": "node ./platform/architecture/print-ai-topology.js",
     "inspect:realtime": "node ./platform/architecture/print-realtime-topology.js",
     "inspect:security": "node ./platform/architecture/print-security-topology.js",
-    "inspect:resilience": "node ./platform/architecture/print-resilience-topology.js"
+    "inspect:resilience": "node ./platform/architecture/print-resilience-topology.js",
+    "governance": "node ./.agents/governance/scripts/governance-cli.mjs",
+    "test:governance": "node --test ./.agents/governance/test/governance-cli.test.mjs"
   },
   "dependencies": {
     "kafkajs": "^2.2.4"
