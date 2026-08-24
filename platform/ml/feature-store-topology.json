@@ -1,0 +1,45 @@
+{
+  "platform": "ML Platform",
+  "language": "Python 3.10+",
+  "framework": "FastAPI",
+  "port": 8001,
+  "components": {
+    "featureStore": {
+      "description": "Ingest & store feature vectors vào MongoDB",
+      "endpoints": [
+        "POST /api/v1/features/ingest",
+        "POST /api/v1/features/zone-metrics"
+      ],
+      "storage": "MongoDB (collection: ml_features, zone_metrics)",
+      "dataSources": ["GPS / Location Data", "Trip History", "Ratings & Feedback"]
+    },
+    "modelTraining": {
+      "description": "XGBoost training pipeline triggered on-demand",
+      "endpoints": [
+        "POST /api/v1/training/trigger",
+        "GET  /api/v1/training/jobs/{jobId}"
+      ],
+      "algorithm": "XGBoost XGBRegressor",
+      "features": ["hour_of_day", "day_of_week", "demand_count", "supply_count", "avg_speed_kmh", "rain_indicator"],
+      "modelArtifact": "/app/model_store/surge_model.joblib",
+      "fallback": "Synthetic data (800 samples) when Feature Store has < 50 labeled samples"
+    },
+    "modelServing": {
+      "description": "Background task PUSHes surge multiplier vào Redis mỗi 30 giây",
+      "mechanism": "APScheduler asyncio background loop",
+      "interval_seconds": 30,
+      "redis_key_pattern": "surge_zone:{zoneId}",
+      "redis_ttl_seconds": 90,
+      "clamp": [1.0, 3.0],
+      "coldStartFallback": "demand_count / supply_count ratio (formula-based)",
+      "consumers": [
+        "Surge Pricing Service — owns dynamic pricing inference",
+        "Pricing Service (Node.js) — reads result via internal REST integration"
+      ]
+    }
+  },
+  "infrastructure": {
+    "mongodb": "ml-mongodb:27017 (database: cab_surge_pricing_service)",
+    "redis": "ml-redis:6379 (shared with pricing-service network)"
+  }
+}

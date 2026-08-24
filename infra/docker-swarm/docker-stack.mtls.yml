@@ -1,0 +1,128 @@
+services:
+  api-gateway:
+    environment:
+      AUTH_SERVICE_URL: https://auth-service:4104
+      AUTH_JWKS_URL: https://auth-service:4104/.well-known/jwks.json
+      AUTH_ME_URL: https://auth-service:4104/api/v1/auth/me
+      BOOKING_SERVICE_URL: https://booking-service:4103
+      PAYMENT_SERVICE_URL: https://payment-service:4102
+      USER_SERVICE_URL: https://user-service:4105
+      PRICING_SERVICE_URL: https://pricing-service:4101
+      REVIEW_SERVICE_URL: https://review-service:4106
+      DRIVER_SERVICE_URL: https://driver-service:4107
+      NOTIFICATION_SERVICE_URL: https://notification-service:4108
+      RIDE_SERVICE_URL: https://ride-service:4109
+      GATEWAY_INTERNAL_TLS_ENABLED: "true"
+      GATEWAY_INTERNAL_TLS_PORT: "3443"
+      GATEWAY_INTERNAL_TLS_ALLOWED_CLIENTS: notification-service
+      GATEWAY_INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      GATEWAY_INTERNAL_TLS_CERT_FILE: /run/mtls/api-gateway/tls.crt
+      GATEWAY_INTERNAL_TLS_KEY_FILE: /run/mtls/api-gateway/tls.key
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  auth-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4104"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/auth-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/auth-service/tls.key
+      NOTIFICATION_SERVICE_BASE_URL: https://notification-service:4108
+      USER_SERVICE_BASE_URL: https://user-service:4105
+      DRIVER_SERVICE_BASE_URL: https://driver-service:4107
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  booking-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4103"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/booking-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/booking-service/tls.key
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  payment-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4102"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/payment-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/payment-service/tls.key
+      REQUIRE_MTLS_FOR_FORWARDED_AUTH: "true"
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  user-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4105"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway,auth-service
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/user-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/user-service/tls.key
+      REQUIRE_MTLS_FOR_FORWARDED_AUTH: "true"
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  review-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4106"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/review-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/review-service/tls.key
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  driver-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4107"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway,auth-service
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/driver-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/driver-service/tls.key
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  notification-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4108"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway,auth-service
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/notification-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/notification-service/tls.key
+      GATEWAY_REALTIME_PUBLISH_URL: https://api-gateway:3443/internal/realtime/publish
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  ride-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4109"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/ride-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/ride-service/tls.key
+      REQUIRE_MTLS_FOR_FORWARDED_AUTH: "true"
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro
+
+  pricing-service:
+    environment:
+      INTERNAL_TLS_ENABLED: "true"
+      INTERNAL_TLS_PORT: "4101"
+      INTERNAL_TLS_ALLOWED_CLIENTS: api-gateway
+      INTERNAL_TLS_CA_FILE: /run/mtls/ca.crt
+      INTERNAL_TLS_CERT_FILE: /run/mtls/pricing-service/tls.crt
+      INTERNAL_TLS_KEY_FILE: /run/mtls/pricing-service/tls.key
+    volumes:
+      - ../../infra/mtls/dev-certs:/run/mtls:ro

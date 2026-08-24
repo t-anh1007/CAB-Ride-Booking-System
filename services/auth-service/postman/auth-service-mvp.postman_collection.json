@@ -1,0 +1,1149 @@
+{
+  "info": {
+    "_postman_id": "316124d3-4f80-4ddf-8f8c-2fc3a0d5c10c",
+    "name": "CAB System - Auth Service 2026",
+    "description": "Fresh Postman collection for the CAB booking project auth flows. Covers authentication, authorization, JWT/OAuth2, RBAC/ABAC, gateway-protected routes, and manual failure-policy drills.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "createdAt": "2026-04-09T20:59:31.000Z",
+    "updatedAt": "2026-04-09T22:53:35.000Z",
+    "lastUpdatedBy": "47840465",
+    "uid": "47840465-316124d3-4f80-4ddf-8f8c-2fc3a0d5c10c"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "[Health] Gateway Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "id": "f0620e26-9f27-4ac8-8996-cea882c7dfd5",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/health",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": [],
+          "createdAt": "2026-04-09T20:59:31.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-f0620e26-9f27-4ac8-8996-cea882c7dfd5"
+        },
+        {
+          "name": "[Health] Auth Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200 or 503', function () { pm.expect([200,503]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "id": "5292f6c8-0880-4fa0-92f6-374b3ad902d0",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/auth/health",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "health"
+              ]
+            }
+          },
+          "response": [],
+          "createdAt": "2026-04-09T20:59:31.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-5292f6c8-0880-4fa0-92f6-374b3ad902d0"
+        }
+      ],
+      "id": "43184d95-3760-5386-9310-0e8c7a64ed14",
+      "createdAt": "2026-04-09T21:08:15.000Z",
+      "updatedAt": "2026-04-09T21:09:54.000Z",
+      "uid": "47840465-43184d95-3760-5386-9310-0e8c7a64ed14"
+    },
+    {
+      "name": "Failure Policy",
+      "item": [
+        {
+          "name": "[Failure Policy] Auth Upstream Down -> Protected Route 503",
+          "id": "ae5b0ac5-84a1-46a3-bff0-e2b995d6e489",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/protected/customer",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "protected",
+                "customer"
+              ]
+            },
+            "description": "Manual drill: stop auth-service or break JWKS upstream first. Expect 503 AUTH_SERVICE_UNAVAILABLE."
+          },
+          "response": [],
+          "createdAt": "2026-04-09T20:59:31.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-ae5b0ac5-84a1-46a3-bff0-e2b995d6e489"
+        },
+        {
+          "name": "[Failure Policy] Redis Down -> OTP Request 503",
+          "id": "c2421b9f-df5f-4f06-a812-600cf23c3682",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{customerDestination}}\",\n  \"role\": \"customer\",\n  \"channel\": \"sms\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/auth/login/otp/request",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "otp",
+                "request"
+              ]
+            },
+            "description": "Manual drill: stop Redis first. Expect 503 REDIS_UNAVAILABLE."
+          },
+          "response": [],
+          "createdAt": "2026-04-09T20:59:31.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-c2421b9f-df5f-4f06-a812-600cf23c3682"
+        },
+        {
+          "name": "[Failure Policy] DB Down -> Admin Login 503",
+          "id": "737a6668-98bc-4c31-be8f-54dfba441987",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{adminDestination}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{gatewayBaseUrl}}/auth/login/admin",
+              "host": [
+                "{{gatewayBaseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login",
+                "admin"
+              ]
+            },
+            "description": "Manual drill: stop Postgres first. Expect 503 AUTH_DB_UNAVAILABLE."
+          },
+          "response": [],
+          "createdAt": "2026-04-09T20:59:31.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-737a6668-98bc-4c31-be8f-54dfba441987"
+        }
+      ],
+      "id": "24c4dc9e-b6a9-89d6-0ba5-bf86217f2d7f",
+      "createdAt": "2026-04-09T21:08:25.000Z",
+      "updatedAt": "2026-04-09T21:09:54.000Z",
+      "uid": "47840465-24c4dc9e-b6a9-89d6-0ba5-bf86217f2d7f"
+    },
+    {
+      "name": "Authorization (RBAC / ABAC)",
+      "item": [
+        {
+          "name": "ABAC",
+          "item": [
+            {
+              "name": "[ABAC] Driver Update Assigned Active Ride -> 200",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "0c3c7a9e-b6d4-46bd-ba15-4391aa6689ef",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driverAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"latitude\": {{driverLatitude}},\n  \"longitude\": {{driverLongitude}}\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/ride/driver/rides/{{rideActiveAssignedId}}/location",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "ride",
+                    "driver",
+                    "rides",
+                    "{{rideActiveAssignedId}}",
+                    "location"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:09:55.000Z",
+              "uid": "47840465-0c3c7a9e-b6d4-46bd-ba15-4391aa6689ef"
+            },
+            {
+              "name": "[ABAC] Driver Update Completed Ride -> 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('status is 403', function () { pm.response.to.have.status(403); });",
+                      "var body = pm.response.json();",
+                      "pm.test('abac denial envelope is informative', function () {",
+                      "  pm.expect(body.success).to.eql(false);",
+                      "  pm.expect(body.error.code).to.eql('RIDE_LOCATION_UPDATE_FORBIDDEN');",
+                      "  pm.expect(body.error.details.reason).to.be.a('string').and.not.empty;",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "id": "b2146dac-6cf7-4024-9395-6674053c905b",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driverAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"latitude\": {{driverLatitude}},\n  \"longitude\": {{driverLongitude}}\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/ride/driver/rides/{{rideCompletedAssignedId}}/location",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "ride",
+                    "driver",
+                    "rides",
+                    "{{rideCompletedAssignedId}}",
+                    "location"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:13:42.000Z",
+              "uid": "47840465-b2146dac-6cf7-4024-9395-6674053c905b"
+            }
+          ],
+          "id": "da932bf9-9dad-e6fb-a88c-bfd9f6d97d3a",
+          "createdAt": "2026-04-09T21:08:39.000Z",
+          "updatedAt": "2026-04-09T21:09:55.000Z",
+          "uid": "47840465-da932bf9-9dad-e6fb-a88c-bfd9f6d97d3a"
+        },
+        {
+          "name": "RBAC",
+          "item": [
+            {
+              "name": "[RBAC] Protected Customer - No Token -> 401",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 401', function () { pm.response.to.have.status(401); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "d042dfb9-0392-4598-bf88-24abe38cc18d",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/protected/customer",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "protected",
+                    "customer"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:09:54.000Z",
+              "uid": "47840465-d042dfb9-0392-4598-bf88-24abe38cc18d"
+            },
+            {
+              "name": "[RBAC] Protected Admin - Customer Token -> 403",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 403', function () { pm.response.to.have.status(403); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "8d38da60-1262-4291-ad53-02b237133b6f",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/protected/admin",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "protected",
+                    "admin"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:09:54.000Z",
+              "uid": "47840465-8d38da60-1262-4291-ad53-02b237133b6f"
+            },
+            {
+              "name": "[RBAC] Protected Driver - Driver Token -> 200",
+              "event": [
+                {
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var body = pm.response.json();",
+                      "var data = body.data || {};",
+                      "pm.test('protected route returns auth context', function () {",
+                      "  pm.expect(body.success).to.eql(true);",
+                      "  pm.expect(data.route).to.eql('driver');",
+                      "  pm.expect(data.auth).to.be.an('object');",
+                      "  pm.expect(data.auth.roles).to.include('driver');",
+                      "});"
+                    ]
+                  },
+                  "listen": "test"
+                }
+              ],
+              "id": "4e675358-2f8a-4ae1-ac17-741e43b71ad6",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{driverAccessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/protected/driver",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "protected",
+                    "driver"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:13:42.000Z",
+              "uid": "47840465-4e675358-2f8a-4ae1-ac17-741e43b71ad6"
+            }
+          ],
+          "id": "06be4cb5-7131-005c-7c2c-51f44f2353c2",
+          "createdAt": "2026-04-09T21:08:39.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-06be4cb5-7131-005c-7c2c-51f44f2353c2"
+        }
+      ],
+      "id": "6274ae28-2dd3-9b83-124f-02005d929ac1",
+      "createdAt": "2026-04-09T21:08:25.000Z",
+      "updatedAt": "2026-04-09T21:08:39.000Z",
+      "uid": "47840465-6274ae28-2dd3-9b83-124f-02005d929ac1"
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Customer OTP",
+          "item": [
+            {
+              "name": "[OTP Customer] Request OTP",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 202', function () { pm.response.to.have.status(202); });",
+                      "var body = pm.response.json();",
+                      "if (body && body.data && body.data.debugOtpCode) { pm.collectionVariables.set('otpCode', body.data.debugOtpCode); pm.environment.set('otpCode', body.data.debugOtpCode); }"
+                    ]
+                  }
+                }
+              ],
+              "id": "1c8cce06-d825-494b-b9b9-d6f4627b6b53",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"destination\": \"{{customerDestination}}\",\n  \"role\": \"customer\",\n  \"channel\": \"sms\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/login/otp/request",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "otp",
+                    "request"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:09:54.000Z",
+              "uid": "47840465-1c8cce06-d825-494b-b9b9-d6f4627b6b53"
+            },
+            {
+              "name": "[OTP Customer] Verify OTP",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var body = pm.response.json();",
+                      "var data = body.data || {};",
+                      "pm.collectionVariables.set('accessToken', data.accessToken || '');",
+                      "pm.environment.set('accessToken', data.accessToken || '');",
+                      "pm.collectionVariables.set('refreshToken', data.refreshToken || '');",
+                      "pm.environment.set('refreshToken', data.refreshToken || '');",
+                      "pm.test('success envelope is valid', function () {",
+                      "  pm.expect(body.success).to.eql(true);",
+                      "  pm.expect(body.error).to.eql(null);",
+                      "  pm.expect(body.meta.requestId).to.be.a('string').and.not.empty;",
+                      "});",
+                      "pm.test('customer auth payload contains token pair', function () {",
+                      "  pm.expect(data.authStatus).to.eql('verified');",
+                      "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.refreshToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.tokenType).to.eql('Bearer');",
+                      "});",
+                      "pm.test('customer bootstrap metadata exists', function () {",
+                      "  pm.expect(data.bootstrap).to.be.an('object');",
+                      "  pm.expect(data.bootstrap.status).to.be.a('string');",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "id": "56745738-ec20-4ef7-905a-588d03080a24",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"destination\": \"{{customerDestination}}\",\n  \"role\": \"customer\",\n  \"code\": \"{{otpCode}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/login/otp/verify",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "otp",
+                    "verify"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:13:42.000Z",
+              "uid": "47840465-56745738-ec20-4ef7-905a-588d03080a24"
+            }
+          ],
+          "id": "496d73ce-4638-8ad6-09cb-c4336c4c427f",
+          "createdAt": "2026-04-09T21:08:39.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-496d73ce-4638-8ad6-09cb-c4336c4c427f"
+        },
+        {
+          "name": "Driver OTP",
+          "item": [
+            {
+              "name": "[OTP Driver] Request OTP",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 202', function () { pm.response.to.have.status(202); });",
+                      "var body = pm.response.json();",
+                      "if (body && body.data && body.data.debugOtpCode) { pm.collectionVariables.set('otpCode', body.data.debugOtpCode); pm.environment.set('otpCode', body.data.debugOtpCode); }"
+                    ]
+                  }
+                }
+              ],
+              "id": "b544545f-dfbd-477d-b232-dad670eccf6a",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"destination\": \"{{driverDestination}}\",\n  \"role\": \"driver\",\n  \"channel\": \"sms\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/login/otp/request",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "otp",
+                    "request"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:09:54.000Z",
+              "uid": "47840465-b544545f-dfbd-477d-b232-dad670eccf6a"
+            },
+            {
+              "name": "[OTP Driver] Verify OTP",
+              "event": [
+                {
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var body = pm.response.json();",
+                      "var data = body.data || {};",
+                      "pm.collectionVariables.set('driverAccessToken', data.accessToken || '');",
+                      "pm.environment.set('driverAccessToken', data.accessToken || '');",
+                      "pm.collectionVariables.set('driverRefreshToken', data.refreshToken || '');",
+                      "pm.environment.set('driverRefreshToken', data.refreshToken || '');",
+                      "pm.test('driver token pair exists', function () {",
+                      "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.refreshToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.tokenType).to.eql('Bearer');",
+                      "});",
+                      "pm.test('driver account and bootstrap are present', function () {",
+                      "  pm.expect(data.account).to.be.an('object');",
+                      "  pm.expect(data.account.roles).to.include('driver');",
+                      "  pm.expect(data.bootstrap).to.be.an('object');",
+                      "});"
+                    ]
+                  },
+                  "listen": "test"
+                }
+              ],
+              "id": "8eafef69-a61d-46fc-9308-14809a17f1e7",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"destination\": \"{{driverDestination}}\",\n  \"role\": \"driver\",\n  \"code\": \"{{otpCode}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/login/otp/verify",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "otp",
+                    "verify"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:13:42.000Z",
+              "uid": "47840465-8eafef69-a61d-46fc-9308-14809a17f1e7"
+            }
+          ],
+          "id": "467c998f-a77d-ae15-525a-3e476100952b",
+          "createdAt": "2026-04-09T21:08:39.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-467c998f-a77d-ae15-525a-3e476100952b"
+        },
+        {
+          "name": "Admin MFA",
+          "item": [
+            {
+              "name": "[Admin] Password Login",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var body = pm.response.json();",
+                      "var data = body.data || {};",
+                      "pm.collectionVariables.set('adminChallengeToken', data.challengeToken || '');",
+                      "pm.environment.set('adminChallengeToken', data.challengeToken || '');",
+                      "pm.test('admin password step returns challenge only', function () {",
+                      "  pm.expect(data.authStatus).to.eql('mfa_required');",
+                      "  pm.expect(data.challengeToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.challengeExpiresInSeconds).to.be.a('number');",
+                      "  pm.expect(data.accessToken || null).to.eql(null);",
+                      "  pm.expect(data.refreshToken || null).to.eql(null);",
+                      "});",
+                      "pm.test('mfa setup payload is shaped correctly when present', function () {",
+                      "  if (data.mfaSetup) {",
+                      "    pm.expect(data.mfaSetup).to.be.an('object');",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "id": "210ac7d1-2043-46ef-81be-b5e7f8bbb44c",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"destination\": \"{{adminDestination}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/login/admin",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login",
+                    "admin"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:13:42.000Z",
+              "uid": "47840465-210ac7d1-2043-46ef-81be-b5e7f8bbb44c"
+            },
+            {
+              "name": "[Admin] Complete MFA",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var body = pm.response.json();",
+                      "var data = body.data || {};",
+                      "pm.collectionVariables.set('adminAccessToken', data.accessToken || '');",
+                      "pm.environment.set('adminAccessToken', data.accessToken || '');",
+                      "pm.collectionVariables.set('adminRefreshToken', data.refreshToken || '');",
+                      "pm.environment.set('adminRefreshToken', data.refreshToken || '');",
+                      "pm.test('admin final tokens are returned', function () {",
+                      "  pm.expect(data.authStatus).to.eql('authenticated');",
+                      "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.refreshToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.tokenType).to.eql('Bearer');",
+                      "});",
+                      "pm.test('mfa method is recorded', function () {",
+                      "  pm.expect(data.mfaMethod).to.be.a('string').and.not.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "id": "30ec8a12-3a49-483b-a8b6-c20ee346bfd9",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"challengeToken\": \"{{adminChallengeToken}}\",\n  \"totpCode\": \"{{adminTotpCode}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/mfa/challenge",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "mfa",
+                    "challenge"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T21:13:42.000Z",
+              "uid": "47840465-30ec8a12-3a49-483b-a8b6-c20ee346bfd9"
+            }
+          ],
+          "id": "4a9b84a3-4f5d-e42e-0383-347ab540630a",
+          "createdAt": "2026-04-09T21:08:39.000Z",
+          "updatedAt": "2026-04-09T21:09:54.000Z",
+          "uid": "47840465-4a9b84a3-4f5d-e42e-0383-347ab540630a"
+        },
+        {
+          "name": "JWT",
+          "item": [
+            {
+              "name": "[JWT] Auth Me - Customer",
+              "event": [
+                {
+                  "script": {
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var body = pm.response.json();",
+                      "var data = body.data || {};",
+                      "pm.test('auth context envelope is valid', function () {",
+                      "  pm.expect(body.success).to.eql(true);",
+                      "  pm.expect(body.error).to.eql(null);",
+                      "  pm.expect(body.meta.requestId).to.be.a('string').and.not.empty;",
+                      "});",
+                      "pm.test('auth context contains jwt contract fields', function () {",
+                      "  pm.expect(data.subjectId).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.accountId).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.sessionId).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.roles).to.be.an('array').and.not.empty;",
+                      "  pm.expect(data.scopes).to.be.an('array');",
+                      "  pm.expect(data.permissions).to.be.an('array');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  },
+                  "listen": "test"
+                }
+              ],
+              "id": "a3521307-32a8-4ef2-96fe-85a6b57175cb",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/auth/me",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "auth",
+                    "me"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T23:03:00.000Z",
+              "uid": "47840465-a3521307-32a8-4ef2-96fe-85a6b57175cb"
+            },
+            {
+              "name": "[OAuth2] OAuth Revoke Alias",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "ca290298-affb-5752-7d0c-9e8a2751bf7b",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "value": "application/json",
+                    "key": "Content-Type"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/oauth/revoke",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "oauth",
+                    "revoke"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T23:06:50.000Z",
+              "updatedAt": "2026-04-09T23:07:00.000Z",
+              "uid": "47840465-ca290298-affb-5752-7d0c-9e8a2751bf7b"
+            }
+          ],
+          "id": "a0c46426-0004-4021-88fa-d165b7a711e9",
+          "createdAt": "2026-04-09T23:02:57.000Z",
+          "updatedAt": "2026-04-09T23:03:00.000Z",
+          "uid": "47840465-a0c46426-0004-4021-88fa-d165b7a711e9"
+        }
+      ],
+      "id": "61ffb646-4704-39e1-ea22-8b76904774a2",
+      "createdAt": "2026-04-09T21:08:25.000Z",
+      "updatedAt": "2026-04-09T23:07:06.000Z",
+      "uid": "47840465-61ffb646-4704-39e1-ea22-8b76904774a2"
+    },
+    {
+      "name": "Session Lifecycle (JWT / OAuth2)",
+      "item": [
+        {
+          "name": "Refresh",
+          "item": [
+            {
+              "name": "[OAuth2] Refresh Customer Token",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "var _rtOld = pm.environment.get('refreshToken') || pm.collectionVariables.get('refreshToken') || '';",
+                      "pm.collectionVariables.set('oldRefreshToken', _rtOld);",
+                      "pm.environment.set('oldRefreshToken', _rtOld);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var body = pm.response.json();",
+                      "var data = body.data || {};",
+                      "pm.collectionVariables.set('accessToken', data.accessToken || '');",
+                      "pm.environment.set('accessToken', data.accessToken || '');",
+                      "pm.collectionVariables.set('refreshToken', data.refreshToken || '');",
+                      "pm.environment.set('refreshToken', data.refreshToken || '');",
+                      "pm.test('refresh rotation returns fresh token pair', function () {",
+                      "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.refreshToken).to.be.a('string').and.not.empty;",
+                      "  pm.expect(data.refreshToken).to.not.eql(pm.collectionVariables.get('oldRefreshToken'));",
+                      "  pm.expect(data.tokenType).to.eql('Bearer');",
+                      "});",
+                      "pm.test('session id survives rotation', function () {",
+                      "  pm.expect(data.sessionId).to.be.a('string').and.not.empty;",
+                      "});"
+                    ]
+                  }
+                }
+              ],
+              "id": "8d3fb995-dc14-45af-b87c-59481c27ede8",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/refresh",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "refresh"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T23:03:05.000Z",
+              "uid": "47840465-8d3fb995-dc14-45af-b87c-59481c27ede8"
+            }
+          ],
+          "id": "c58519ff-921a-a367-2b88-3577f5f3e2bd",
+          "createdAt": "2026-04-09T23:03:00.000Z",
+          "updatedAt": "2026-04-09T23:03:05.000Z",
+          "uid": "47840465-c58519ff-921a-a367-2b88-3577f5f3e2bd"
+        },
+        {
+          "name": "OAuth2 aliases",
+          "item": [
+            {
+              "name": "[OAuth2] OAuth Token Alias",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "var _rtOld = pm.environment.get('refreshToken') || pm.collectionVariables.get('refreshToken') || '';",
+                      "pm.collectionVariables.set('oldRefreshToken', _rtOld);",
+                      "pm.environment.set('oldRefreshToken', _rtOld);"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('status is 200', function () { pm.response.to.have.status(200); });",
+                      "var data = (pm.response.json().data || {});",
+                      "pm.collectionVariables.set('accessToken', data.accessToken || '');",
+                      "pm.environment.set('accessToken', data.accessToken || '');",
+                      "pm.collectionVariables.set('refreshToken', data.refreshToken || '');",
+                      "pm.environment.set('refreshToken', data.refreshToken || '');",
+                      "pm.test('oauth alias rotated token', function () { pm.expect(data.refreshToken).to.not.eql(pm.collectionVariables.get('oldRefreshToken')); });"
+                    ]
+                  }
+                }
+              ],
+              "id": "53175ffd-57a6-4448-bc65-27a2cd91c457",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"grant_type\": \"refresh_token\",\n  \"refresh_token\": \"{{refreshToken}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{gatewayBaseUrl}}/auth/oauth/token",
+                  "host": [
+                    "{{gatewayBaseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "oauth",
+                    "token"
+                  ]
+                }
+              },
+              "response": [],
+              "createdAt": "2026-04-09T20:59:31.000Z",
+              "updatedAt": "2026-04-09T23:03:14.000Z",
+              "uid": "47840465-53175ffd-57a6-4448-bc65-27a2cd91c457"
+            }
+          ],
+          "id": "3f8e88a1-43fe-9f0b-cce2-0a7ba49fceda",
+          "createdAt": "2026-04-09T23:03:01.000Z",
+          "updatedAt": "2026-04-09T23:06:50.000Z",
+          "uid": "47840465-3f8e88a1-43fe-9f0b-cce2-0a7ba49fceda"
+        }
+      ],
+      "id": "f4bb69e5-b073-5b62-7bfe-7683283899cb",
+      "createdAt": "2026-04-09T21:08:25.000Z",
+      "updatedAt": "2026-04-09T23:07:23.929Z",
+      "uid": "47840465-f4bb69e5-b073-5b62-7bfe-7683283899cb"
+    }
+  ],
+  "variable": [
+    {
+      "key": "gatewayBaseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "customerDestination",
+      "value": "+84900000001"
+    },
+    {
+      "key": "driverDestination",
+      "value": "+84900000002"
+    },
+    {
+      "key": "otpCode",
+      "value": ""
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    },
+    {
+      "key": "oldRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "driverAccessToken",
+      "value": ""
+    },
+    {
+      "key": "driverRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "adminDestination",
+      "value": "admin@cab.local"
+    },
+    {
+      "key": "adminPassword",
+      "value": "ChangeMe123!"
+    },
+    {
+      "key": "adminChallengeToken",
+      "value": ""
+    },
+    {
+      "key": "adminTotpCode",
+      "value": ""
+    },
+    {
+      "key": "adminAccessToken",
+      "value": ""
+    },
+    {
+      "key": "adminRefreshToken",
+      "value": ""
+    },
+    {
+      "key": "rideActiveAssignedId",
+      "value": "ride-active-assigned-driver-1"
+    },
+    {
+      "key": "rideCompletedAssignedId",
+      "value": "ride-completed-assigned-driver-1"
+    },
+    {
+      "key": "driverLatitude",
+      "value": "10.7769"
+    },
+    {
+      "key": "driverLongitude",
+      "value": "106.7009"
+    }
+  ]
+}

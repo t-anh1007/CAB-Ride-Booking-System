@@ -1,0 +1,60 @@
+{
+  "skill_name": "cab-scalability-resilience",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "gateway-auth-review",
+      "prompt": "Vui lòng review luồng đăng nhập Gateway -> Auth, đặc biệt kiểm tra kịch bản refresh token bị tái sử dụng (replay) và gateway xử lý như nào khi downstream/upstream bị timeout.",
+      "expected_output": "report co du scenario GA-1 hoac GA-2, chi ra fail-safe behavior hoac missing evidence",
+      "files": [],
+      "assertions": [],
+      "expected_workflow": "gateway-auth",
+      "repo_artifacts_the_skill_should_cite": [
+        "gateway/api-gateway/src/services/proxy-client.js",
+        "gateway/api-gateway/src/services/circuit-breaker.js",
+        "services/auth-service/src/services/session.service.js"
+      ],
+      "forbidden_assumptions": [
+        "khong assume Kubernetes/HPA runtime",
+        "khong assume auth fallback la an toan neu chua co evidence"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "payment-retry-safety",
+      "prompt": "Hãy kiểm tra cơ chế thanh toán retry/backoff. Tôi muốn xem nếu provider thanh toán thất bại ở các lần thử (exhausted state), thì hệ thống xử lý thế nào, liệu có bị double charge không.",
+      "expected_output": "report co scenario PAY-1 hoac PAY-2, biet doc retry persistence, exhausted state, va outbox evidence",
+      "files": [],
+      "assertions": [],
+      "expected_workflow": "payment",
+      "repo_artifacts_the_skill_should_cite": [
+        "services/payment-service/FLOW-MAPPING.md",
+        "services/payment-service/src/services/retryEngine.js",
+        "services/payment-service/src/config/constants.js"
+      ],
+      "forbidden_assumptions": [
+        "khong tu dong ket luan PASS neu khong co transaction/outbox evidence",
+        "khong mo ta saga nhu da full choreography neu repo chi moi integration-ready"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "booking-replay-safety",
+      "prompt": "Test an toàn tính năng đặt xe và đồng bộ lái xe. Liệu việc submit lại request tạo booking nhiều lần (ví dụ do lỗi đường truyền mạng lag) có làm nhân đôi event hay đẻ payload rác vào db không? Hãy xác minh cả chứng cứ đẩy Kafka event nữa.",
+      "expected_output": "report co scenario BRD-1 hoac BRD-2, phan biet duoc PASS, MISSING_EVIDENCE, ARCHITECTURE_DRIFT",
+      "files": [],
+      "assertions": [],
+      "expected_workflow": "booking-ride-driver",
+      "repo_artifacts_the_skill_should_cite": [
+        "services/booking-service/src/controllers/bookingController.js",
+        "services/driver-service/src/controllers/driverController.js",
+        "message-broker/kafka/topology.json",
+        "docs/architecture/postman_collection.json"
+      ],
+      "forbidden_assumptions": [
+        "khong assume runtime da co full WebSocket/Kafka path neu evidence thieu",
+        "khong claim AI workflow san sang trong v1"
+      ]
+    }
+  ]
+}

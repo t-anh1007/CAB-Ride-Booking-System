@@ -1,0 +1,883 @@
+CAB BOOKING SYSTEM
+Aims: Microservices – Real-time – Event-driven – AI-enabled – Zero Trust Architecture
+Tóm tắt (Abstract)
+Tài liệu này trình bày việc phân tích, thiết kế và đánh giá một hệ thống ứng dụng đặt xe taxi hiện đại dựa trên kiến trúc Microservices, đáp ứng các yêu cầu về khả năng mở rộng, độ tin cậy, xử lý thời gian thực, bảo mật theo mô hình Zero Trust và tích hợp t rí tuệ nhân tạo. Hệ thống được thiết kế hướng cloud-native, sử dụng các công nghệ phổ biến trong công nghiệp nhằm đảm bảo tính khả thi triển khai thực tế.
+Technology Stack:
+Back-end: NodeJS / ExpressJS / NestJS
+Front-end: React JS / Next JS + Tailwind CSS
+Deployment: AWS Cloud / Terraform/ Kubernetes Event-driven: Kafka, RabbitMQ
+Communication: gRPC, restful api Real-time: web socket , hook
+Security: Zero trust Architecture Monitor: Grafana Prometheus
+Logging: ELK
+Mục lục (Table of Contents)
+Giới thiệu
+Phân tích bài toán & yêu cầu hệ thống
+Tổng quan kiến trúc hệ thống
+Kiến trúc Microservices
+Kiến trúc Real-time & Event-driven
+Kiến trúc AI & Intelligent Services
+Kiến trúc bảo mật (Zero Trust Architecture)
+Kiến trúc mở rộng & chịu lỗi (Scalability & Resilience)
+Thiết kế chi tiết (Sequence Diagrams)
+Thiết kế dữ liệu (ERD)
+API Specification (OpenAPI)
+Failure Scenarios & Recovery Strategies
+Saga Pattern cho Payment
+Stack công nghệ & Chi phí triển khai
+Kết luận
+THIẾT KẾ KIẾN TRÚC HỆ THỐNG ỨNG DỤNG ĐẶT XE TAXI CAB BOOKING SYSTEM
+Tóm tắt điều hành (Executive Summary)
+Tài liệu này mô tả thiết kế kiến trúc hoàn chỉnh cho hệ thống ứng dụng đặt xe Taxi (CAB Booking System) xây dựng theo kiến trúc Microservices, sử dụng Node.js cho backend và
+React.js cho frontend. Hệ thống được thiết kế để đáp ứng các yêu cầu real-time, mở rộng lớn, chịu lỗi cao, bảo mật, và sẵn sàng triển khai trên Docker Swarm / Cloud & Kubernetes.
+Tài liệu phù hợp để sử dụng cho:
+Hồ sơ thiết kế hệ thống (System Design Document)
+Khóa luận tốt nghiệp đại học chuyên ngành Hệ thống thông tin
+Tài liệu kỹ thuật cho team phát triển & vận hành
+Tổng quan hệ thống
+Hệ thống CAB Booking là nền tảng kết nối khách hàng – tài xế – nhà vận hành theo thời gian thực, hỗ trợ:
+Đặt xe
+Định vị GPS real-time
+Ghép tài xế thông minh
+Thanh toán
+Đánh giá & quản trị
+Kiến trúc áp dụng Microservices + Event-driven, cho phép từng dịch vụ mở rộng độc lập và giảm phụ thuộc lẫn nhau.
+Mục tiêu & Nguyên tắc thiết kế
+Mục tiêu
+Scalability: mở rộng theo lưu lượng
+High Availability: hệ thống luôn sẵn sàng
+Fault Tolerance: không có single point of failure (SPOF)
+Real-time: cập nhật trạng thái & vị trí tức thời
+Cloud-native: Docker container / Pod, orchestration (Docker Swarm / Kubernetes), CI/CD (Github Action)
+Nguyên tắc kiến trúc
+Database per service
+Stateless services
+Async-first (Event-driven)
+Zero trust security
+Observability by design
+Kiến trúc tổng thể (Overall Architecture)
+Kiến trúc tổng thể – Microservices
+d-Client Layer
+Admin Dashboard ReactJS
+Customer App ReactJS
+Driver App ReactJS
+d-API gateway
+API gateway NodeJS
+d-Microservices Layer
+Pricing Services
+Payment Services
+Booking Services
+Auth Services
+User Services
+Review Services
+Driver Services
+Notification Services
+Ride Services
+d-Data Layer
+PostgreSQL
+MongoDB
+Redis
+d-Message Broker
+Kafka / RabbitMQ
+Kiến trúc triển khai (Deployment Architecture)
+Hệ thống được triển khai trên Docker Swarm on VirtualBox / Cloud + Terraform + Kubernetes, hỗ trợ multi-region và auto-scaling.
+Kiến trúc Real-time & Event-driven
+Kiến trúc bảo mật & Zero Trust (Security / Zero Trust Architecture)
+Nguyên lý Zero Trust áp dụng
+Kiến trúc bảo mật của hệ thống CAB Booking được thiết kế theo mô hình Zero Trust, với nguyên tắc cốt lõi:
+Never trust, always verify
+Mọi request đều phải được xác thực và ủy quyền
+Không giả định an toàn dù request đến từ mạng nội bộ
+Zero Trust được áp dụng xuyên suốt từ Client → Gateway → Microservices → Data.
+Sơ đồ kiến trúc Zero Trust
+Bảo mật tầng Client & Edge
+HTTPS/TLS 1.3 bắt buộc
+WAF chống:
+SQL Injection
+XSS
+DDoS layer 7
+Rate limiting theo IP / user / device
+Device fingerprinting (tuỳ chọn)
+API Gateway Security
+API Gateway đóng vai trò Policy Enforcement Point (PEP):
+Xác thực JWT / OAuth2
+Kiểm tra scope, role, permission
+Rate limit & quota
+Request validation (schema)
+Chặn request bất thường trước khi vào service
+Service-to-Service Security
+mTLS cho toàn bộ giao tiếp nội bộ
+Mỗi service có service identity riêng
+Áp dụng thông qua:
+Service Mesh (Istio / Linkerd) Lợi ích:
+Ngăn lateral movement
+Mutual authentication
+Encrypted traffic nội bộ
+Authorization: RBAC & ABAC
+RBAC cho quyền cơ bản (Customer / Driver / Admin)
+ABAC cho ngữ cảnh động:
+Thời gian
+Vị trí
+Trạng thái chuyến đi
+Ví dụ: Driver chỉ được cập nhật GPS khi ride đang ACTIVE
+Identity & Access Management (IAM)
+Central Auth Service
+JWT ngắn hạn + Refresh Token
+Token rotation
+Token revocation (Redis blacklist)
+MFA cho Admin
+Secrets Management & Key Management
+Không hard-code secrets
+Sử dụng:
+HashiCorp Vault / Cloud Secret Manager
+Key rotation định kỳ
+Mã hóa dữ liệu nhạy cảm (PII, payment)
+Data Security & Privacy
+Encryption at-rest & in-transit
+Masking dữ liệu nhạy cảm
+Tách dữ liệu theo service (database per service)
+Tuân thủ:
+GDPR / PDPA (ở mức kiến trúc)
+Audit, Logging & Threat Detection
+Audit log cho:
+Login
+Payment
+Permission change
+Centralized logging (ELK / OpenSearch)
+SIEM phát hiện bất thường
+Alert real-time cho sự cố bảo mật
+Mapping Zero Trust → Failure Scenarios
+Nguy cơ
+Cơ chế Zero Trust
+Token bị lộ
+Token rotation + revoke
+Service compromise
+mTLS + isolation
+Lateral movement
+Service identity
+Insider threat
+Audit & SIEM
+DDoS
+WAF + rate limit
+Đánh giá học thuật
+Mô hình Zero Trust phù hợp với hệ thống microservices phân tán, đặc biệt trong môi trường cloud, nơi ranh giới mạng truyền thống không còn hiệu quả. Việc áp dụng Zero Trust giúp giảm đáng kể rủi ro tấn công chuỗi và tăng khả năng kiểm soát truy cập.
+Kiến trúc mở rộng & chịu lỗi (Scalability & Resilience)
+Áp dụng các pattern:
+Horizontal Pod Autoscaling (HPA)
+Circuit Breaker
+Retry / Timeout
+Graceful Degradation
+Eventual Consistency
+Kiến trúc AI & Machine Learning
+Ứng dụng AI:
+Ghép tài xế tối ưu
+Surge pricing
+Dự đoán ETA
+Gợi ý & phân tích hành vi
+Các use-case AI chính
+AI Driver Matching
+Chọn tài xế tối ưu dựa trên:
+Khoảng cách (GPS)
+Lịch sử chuyến đi
+Rating & hành vi
+Surge Pricing
+Giá động theo:
+Cung – cầu
+Thời gian, khu vực
+Lịch sử dữ liệu
+ETA Prediction
+Dự đoán thời gian xe đến chính xác hơn
+Kiến trúc AI trong sơ đồ
+AI/ML Layer:
+Matching Service
+Surge Pricing Model
+ETA Prediction Model
+ML Platform:
+o Feature Store
+Model Training
+Model Serving API
+Data Sources:
+Trip History
+GPS / Location
+Rating & Feedback
+Sequence Diagram
+Quy trình đặt xe end-to-end
+Login & Refresh Token
+Sequence Diagram này thể hiện rõ 3 luồng quan trọng
+⬛¹ Login Flow
+User gửi username/password
+API Gateway → Auth Service
+Auth Service:
+Verify DB / Identity Store
+Sinh Access Token (JWT) + Refresh Token
+Lưu Refresh Token vào Redis
+⬛2⬛ Gọi API được bảo vệ
+User gửi Access Token
+Gateway xác thực JWT với Auth Service
+Cho phép request đi tiếp
+⬛3 Refresh Token Flow
+Access Token hết hạn
+User gửi Refresh Token
+Auth Service:
+Kiểm tra Redis
+Rotate Refresh Token (best practice)
+Trả về cặp token mới
+)yS Đây là chuẩn bảo mật enterprise (OWASP khuyến nghị), rất phù hợp để:
+Giải thích kiến trúc Security
+Bảo vệ hệ thống CAB real-time
+Real-time GPS Update (Driver → Passenger)
+Giải thích:
+Driver gửi GPS định kỳ qua WebSocket
+Ride Service cập nhật Redis (Geo index) để query nhanh
+Event được publish để các service khác consume (ETA, AI, Monitoring)
+Passenger nhận vị trí gần real-time (<1s latency)
+AI Driver Matching (Chi tiết)
+Giải thích chi tiết:
+Redis Geo dùng để lọc tài xế gần nhất (hard constraint)
+Feature Store cung cấp dữ liệu cho AI (rating, lịch sử, ETA)
+AI Matching Service xử lý soft constraints & scoring
+Kết quả được publish qua Kafka để đảm bảo decoupling
+Cho phép fallback sang rule-based matching khi AI lỗi
+Payment Failure & Retry (Chi tiết)
+Giải thích:
+Áp dụng Retry + Exponential Backoff cho payment
+Payment Service là source of truth cho trạng thái thanh toán
+Event-driven đảm bảo eventual consistency
+Không block luồng người dùng khi cổng thanh toán chậm
+Cho phép mở rộng sang nhiều PSP (Stripe, VNPay, MoMo, …)
+Saga Pattern cho Payment (Hoàn chỉnh)
+Đặc điểm Saga Payment:
+Saga choreography-based (event-driven)
+Không sử dụng distributed transaction (2PC)
+Mỗi bước có compensation action rõ ràng
+Đảm bảo no double charge – no lost money
+Phù hợp với payment real-world (PSP không reliable)
+Surge Pricing Real-time (Chi tiết)
+Giải thích chi tiết:
+Surge Pricing chạy near real-time, tách khỏi flow booking
+Redis lưu metrics cung/cầu theo zone để truy xuất nhanh
+AI model xử lý yếu tố thời gian, sự kiện, lịch sử
+Kafka broadcast surge change cho cache, dashboard, analytics
+Đảm bảo giá nhất quán giữa estimate và booking
+ETA Calculation Real-time (Chi tiết)
+Điểm kiến trúc nổi bật
+ETA là service độc lập (xử lý tính toán độc lập) → không block booking/matching (tránh làm chậm booking)
+GPS cập nhật event-driven (Kafka) → real-time đúng nghĩa
+Redis làm hot-store cho vị trí & ETA (Redis dùng cache ETA & vị trí) → giảm latency , latency thấp
+Tách routing & traffic → dễ thay Google Map / Here / OSRM
+Mở đường cho AI ETA (bias correction theo lịch sử). Có thể tích hợp AI để điều chỉnh ETA theo lịch sử.
+9A. Thiết kế UI/UX cho hệ thống CAB Booking
+Phần này bổ sung thiết kế UI/UX ở mức kiến trúc & wireframe, phục vụ mục tiêu:
+Hoàn chỉnh luận văn (end-to-end system)
+Chứng minh tính khả thi triển khai frontend
+Làm cầu nối giữa kiến trúc backend và trải nghiệm người dùng Thiết kế UI tuân theo các nguyên tắc:
+Mobile-first
+Real-time feedback
+Role-based UI (Customer / Driver / Admin)
+Tối giản – dễ mở rộng
+9A.1 Tổng quan các ứng dụng giao diện
+Ứng dụng
+Người dùng
+Mục tiêu
+Customer App
+Hành khách
+Đặt xe, theo dõi, thanh toán
+Driver App
+Tài xế
+Nhận chuyến, dẫn đường, thu nhập
+Admin Dashboard
+Vận hành
+Giám sát, cấu hình, phân tích
+9A.2 UI/UX – Customer App (Hành khách)
+Phần này trình bày thiết kế UI chi tiết ở mức màn hình & component, đủ để:
+Làm phụ lục thiết kế giao diện cho luận văn
+Chuyển trực tiếp sang Figma / React implementation
+9A.2.1 Nguyên tắc thiết kế
+Mobile-first (iOS / Android)
+One-hand usage
+Real-time feedback (GPS, ETA, price)
+Progressive disclosure (ẩn bớt chi tiết nâng cao)
+9A.2.2 Danh sách màn hình Customer App
+ID
+Màn hình
+Mục tiêu
+C1 C2 C3
+C4
+Splash / Onboarding
+Giới thiệu & quyền truy cập
+Login / Register
+Xác thực người dùng
+Home – Map & Pickup
+Đặt điểm đón
+Destination
+Nhập điểm đến
+ID C5 C6 C7 C8 C9 C10
+C11
+Màn hình
+Mục tiêu
+Ride Options
+Chọn loại xe & giá
+Searching Driver
+Matching real-time
+Ride Tracking
+Theo dõi chuyến đi
+Payment
+Thanh toán
+Rating & Feedback
+Đánh giá
+Ride History
+Lịch sử
+Profile & Wallet
+Thông tin cá nhân
+9A.2.3 UI chi tiết từng màn hình C1 – Splash / Onboarding
+Logo trung tâm
+3 slide giới thiệu (Book – Track – Pay)
+CTA: Get Started Components:
+Carousel
+Primary Button
+C2 – Login / Register
+Layout:
+Phone / Email input
+OTP verification
+Social login (optional) Components:
+InputField
+OTPInput
+SubmitButton API:
+Auth Service (Login / Refresh Token)
+C3 – Home (Map & Pickup)
+Layout:
+Full-screen Map
+Pickup pin (center)
+Bottom Sheet (collapsed) Bottom Sheet content:
+Pickup address (auto-detect)
+Shortcut: Home / Work
+CTA: Set Destination Components:
+MapView
+LocationSearch
+BottomSheet WebSocket:
+Driver nearby
+C4 – Destination Selection
+Layout:
+Search bar
+Suggested places
+Recent destinations Components:
+SearchInput
+PlaceList
+C5 – Ride Options & Pricing
+Layout:
+Horizontal ride cards
+ETA + price
+Surge indicator Ride Card:
+Vehicle icon
+Capacity
+ETA
+Price Components:
+RideOptionCard
+PriceBreakdownModal API:
+Pricing Service
+ETA Service
+C6 – Searching Driver (Matching)
+Layout:
+Map + animated ripple
+Status text
+Cancel button States:
+Searching
+Driver Found
+WebSocket:
+Matching updates
+C7 – Ride Tracking (In-progress)
+Layout:
+Map (driver + route)
+Driver info card
+ETA live update Driver Card:
+Avatar
+Rating
+Call / Chat Components:
+DriverInfoCard
+LiveRouteMap
+C8 – Payment
+Layout:
+Fare summary
+Payment method selector
+Pay button Methods:
+Cash
+Card
+Wallet API:
+Payment Service
+C9 – Rating & Feedback
+Layout:
+Star rating
+Comment box
+Tip (optional) Components:
+RatingStars
+TextArea
+C10 – Ride History
+Layout:
+List view
+Filter by date/status Item:
+Date
+Route summary
+Amount
+C11 – Profile & Wallet
+Tabs:
+Profile
+Wallet
+Settings Features:
+Saved locations
+Payment methods
+Logout
+9A.2.4 Luồng UI tổng thể (Customer Journey)
+9A.2.5 Mapping UI Components → React Structure
+9A.2.6 Đánh giá
+Thiết kế UI Customer App được chi tiết hóa đến mức component & API mapping, đảm bảo:
+Phù hợp triển khai React / React Native
+Hỗ trợ real-time, AI matching, surge pricing
+Đủ chiều sâu cho phụ lục thiết kế giao diện trong luận văn
+9A.3 UI/UX – Driver App (Tài xế) Các màn hình chính
+Login / KYC
+Online / Offline toggle
+Nhận chuyến (Incoming request)
+Dẫn đường tới điểm đón
+Theo dõi chuyến đi
+Kết thúc & thu nhập
+Lịch sử chuyến đi
+Wireframe luồng Driver
+Thành phần UI
+Map full-screen
+Accept / Reject CTA lớn
+Voice navigation
+Real-time income widget
+9A.4 UI/UX – Admin Dashboard Các module chính
+Dashboard tổng quan (KPI)
+Quản lý người dùng & tài xế
+Quản lý chuyến đi
+Giám sát real-time map
+Pricing & surge control
+Logs & audit
+Sơ đồ module Admin
+9A.5 Mapping UI ↔ Backend Services
+UI Action
+API / Service
+Login
+Auth Service
+Đặt xe
+Booking Service
+Matching
+AI Matching Service
+Theo dõi GPS
+Ride + WebSocket
+ETA
+ETA Service
+Thanh toán
+Payment Service
+Surge price
+Pricing Service
+9A.6 Công nghệ Frontend đề xuất
+ReactJS / NextJS + TypeScript
+React Query / Redux Toolkit
+Socket.IO client
+Mapbox / Google Maps SDK
+Tailwind / MUI
+PWA / React Native (mở rộng)
+9A.7 Đánh giá học thuật
+Thiết kế UI/UX được trình bày ở mức conceptual & architectural, phù hợp với phạm vi luận văn. Việc mô hình hóa luồng người dùng và mapping với backend microservices giúp chứng minh tính nhất quán end-to-end của hệ thống, đồng thời đảm bảo khả năng triển khai thực tế.
+9A.8 Design UI with Figma wireframe
+Tiếp theo, sử dụng Figma kết hợp AI để thiết kế UI. Sau cùng, dùng AI tool để biến đổi thiết kế UI trong Figma thành React Component.
+Tham khảo lý thuyết về UI/UX: https://www.figma.com/resource-library/what-is-wireframing/
+Phương pháp nghiên cứu & tiếp cận luận văn
+Phương pháp nghiên cứu
+Luận văn áp dụng phương pháp Design Science Research (DSR), trong đó trọng tâm là việc
+thiết kế – xây dựng – đánh giá một hiện vật (artifact) là hệ thống kiến trúc CAB Booking. Các bước chính:
+Xác định vấn đề thực tiễn (scalability, real-time, AI)
+Đề xuất kiến trúc giải quyết vấn đề
+Triển khai mô hình kiến trúc (conceptual design)
+Đánh giá thông qua phân tích kiến trúc & kịch bản vận hành
+Phạm vi nghiên cứu
+Tập trung vào kiến trúc phần mềm & hệ phân tán
+Không đi sâu vào UI/UX chi tiết
+AI ở mức kiến trúc & pipeline, không huấn luyện model cụ thể
+Đánh giá kiến trúc (Architecture Evaluation)
+Đánh giá theo thuộc tính chất lượng (Quality Attributes)
+Thuộc tính
+Giải pháp kiến trúc
+Scalability
+Microservices, HPA, Kafka
+Availability
+Multi-region, stateless services
+Performance
+Redis cache, async processing
+Security
+JWT, mTLS, Zero Trust
+Maintainability
+Service isolation, API contract
+Kịch bản đánh giá (ATAM – rút gọn)
+Tăng 10x số lượng booking → hệ thống scale ngang
+Một service AI bị lỗi → fallback rule-based
+Payment gateway timeout → retry & eventual consistency
+Failure Scenarios & Fault Handling (Hoàn chỉnh)
+Phần này mô tả toàn bộ các kịch bản lỗi quan trọng trong hệ thống CAB Booking, cách phát hiện, cô lập và phục hồi nhằm đảm bảo High Availability và Graceful Degradation.
+Nhóm lỗi Authentication & Security
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+Auth Service down
+Pod crash / overload
+API Gateway trả 503, dùng circuit breaker, cho phép refresh token cache ngắn hạn
+JWT hết hạn
+Token expired
+Tự động refresh token
+Token bị lộ
+Client
+compromise
+Revoke token qua Redis blacklist
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+Brute-force login
+Attack
+Rate limit + CAPTCHA
+Nhóm lỗi Booking & Matching
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+Không tìm thấy tài xế
+Supply thấp
+Retry mở rộng bán kính, fallback rule-based
+AI Matching lỗi
+Model / service down
+Fallback sang matching theo khoảng cách
+Booking duplicate
+Network retry
+Idempotency key
+Booking service crash
+Pod failure
+Booking được replay từ Kafka
+Nhóm lỗi Real-time & GPS
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+Mất kết nối WebSocket
+Mobile network
+Auto-reconnect, fallback polling
+GPS trễ / mất
+Thiết bị
+Dùng last-known-location
+Kafka lag
+High throughput
+Scale consumer group
+Nhóm lỗi ETA & Pricing
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+Traffic API down
+Third-party
+Dùng historical average
+ETA Service overload
+Peak traffic
+Cache Redis + rate limit
+Surge AI lỗi
+Model serving down
+Fallback fixed rule
+Inconsistent price
+Race condition
+Price snapshot theo booking
+Nhóm lỗi Payment
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+Payment timeout
+PSP chậm
+Retry + exponential backoff
+PSP down
+Third-party outage
+Switch PSP khác
+Double charge
+Retry race
+Idempotency key
+Payment pending
+Network split
+Eventual consistency
+Nhóm lỗi Data & Storage
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+PostgreSQL fail
+Node crash
+Read replica + failover
+Redis eviction
+Memory pressure
+TTL + recompute
+MongoDB lag
+Replication delay
+Read preference
+Nhóm lỗi Infrastructure
+Failure Scenario
+Nguyên nhân
+Cách xử lý
+Pod crash
+Bug / OOM
+Auto restart
+Node down
+Cloud issue
+Reschedule pod
+Region outage
+Disaster
+Multi-region failover
+Network partition
+ISP
+Eventual consistency
+Failure Handling Patterns Tổng hợp
+Circuit Breaker
+Retry + Backoff
+Bulkhead Isolation
+Idempotency
+Saga pattern
+Eventual consistency
+Graceful degradation
+Phân tích so sánh & Trade-off
+So sánh Monolithic vs Microservices
+Tiêu chí
+Monolithic
+Microservices
+Scale
+Khó
+Dễ
+Độ phức tạp
+Thấp ban đầu
+Cao hơn
+Phù hợp taxi
++
+⬛✓⬛
+Trade-off chính
+Tăng độ phức tạp vận hành để đổi lấy khả năng mở rộng
+Eventual consistency thay cho strong consistency
+Chi phí infra cao hơn nhưng đáp ứng real-time
+Stack công nghệ & Chi phí triển khai (Technology Stack & Cost Estimation)
+Tổng quan lựa chọn stack
+Stack công nghệ được lựa chọn theo tiêu chí:
+Cloud-native, phổ biến, dễ tuyển nhân sự
+Phù hợp hệ thống real-time, microservices
+Có hệ sinh thái mạnh & cộng đồng lớn
+Stack công nghệ chi tiết
+Frontend
+Thành phần
+Công nghệ
+Web App
+ReactJS / NextJS, TypeScript
+State management
+Redux Toolkit / React Query
+Real-time
+Socket.IO / WebSocket
+Build & Deploy
+Vite / CI-CD
+Backend / Microservices
+Thành phần
+Công nghệ
+Runtime
+Node.js (NestJS / Express)
+API
+REST + OpenAPI Swagger
+Auth
+OAuth2, JWT
+Real-time
+Socket.IO
+Validation
+Zod / Joi
+Microservices internal communication
+Synchronous: request-response, like REST API (HTTP/HTTPS), gRPC Asynchronous: event-driven, message queues (RabbitMQ, Kafka)
+Event & Messaging
+Thành phần
+Công nghệ
+Message Broker
+Apache Kafka (hoặc RabbitMQ)
+Streaming
+Kafka Streams
+Schema
+Schema Registry
+Data Layer
+Thành phần
+Công nghệ
+Transactional DB
+PostgreSQL
+NoSQL
+MongoDB
+Cache / Geo
+Redis
+Search (tuỳ chọn)
+OpenSearch / Elastic
+AI / ML
+Thành phần
+Công nghệ
+Training
+Python, PyTorch / TensorFlow
+Serving
+FastAPI / TorchServe
+Feature Store
+Feast
+Pipeline
+Airflow
+Infrastructure & DevOps
+Thành phần
+Công nghệ
+Cloud
+AWS / GCP / Azure
+Container
+Docker
+Orchestration
+Kubernetes
+Service Mesh
+Istio / Linkerd
+IaC
+Terraform
+CI/CD
+GitHub Actions / GitLab CI
+Observability & Security
+Thành phần
+Công nghệ
+Monitoring
+Prometheus + Grafana
+Logging
+ELK / OpenSearch
+Tracing
+Jaeger
+Secrets
+Vault / Cloud Secret Manager
+WAF
+Cloud WAF
+Ước lượng chi phí triển khai (mang tính tham khảo)
+Giả định: ~100.000 MAU, 5.000 concurrent users, triển khai 1 region chính
+Chi phí hạ tầng hàng tháng (USD)
+Hạng mục
+Dịch vụ
+Chi phí ước tính
+Kubernetes cluster
+EKS / GKE
+300 – 500
+Compute (Pods)
+EC2 / GCE
+800 – 1,200
+Load Balancer
+ALB / GLB
+100 – 150
+PostgreSQL (managed)
+RDS / Cloud SQL
+300 – 500
+MongoDB
+Atlas
+200 – 400
+Redis
+ElastiCache
+150 – 300
+Kafka
+MSK / Confluent
+300 – 600
+Storage & Backup
+Object Storage
+100 – 200
+Observability
+Logs + Metrics
+100 – 200
+Tổng ước tính: ~2,500 – 4,000 USD / tháng
+Chi phí mở rộng theo quy mô
+Quy mô
+MAU
+10k 100k
+1M+
+Chi phí ước tính
+Startup
+500 – 800 USD
+Scale-up
+2,500 – 4,000 USD
+Large scale
+15,000+ USD
+Trade-off chi phí
+Managed services tăng chi phí nhưng giảm rủi ro vận hành
+Kafka tốn kém hơn RabbitMQ nhưng phù hợp real-time scale lớn
+Multi-region tăng HA nhưng chi phí x2–x3
+AI inference chi phí cao → cần cache & batch
+Đánh giá học thuật
+Phân tích stack và chi phí cho thấy kiến trúc đề xuất khả thi trong thực tế, có thể triển khai từ quy mô startup đến enterprise. Việc ước lượng chi phí giúp đánh giá tính kinh tế (economic
+feasibility) của mô hình nghiên cứu.
+Hướng phát triển tương lai (Future Work)
+Mặc dù hệ thống đã được thiết kế tương đối hoàn chỉnh về mặt kiến trúc, bảo mật và khả năng mở rộng, vẫn còn nhiều hướng phát triển tiềm năng trong tương lai nhằm nâng cao hiệu năng, độ thông minh và khả năng thích ứng của hệ thống.
+Nâng cao năng lực AI & Machine Learning
+Áp dụng Reinforcement Learning cho bài toán matching tài xế – khách hàng nhằm tối ưu hóa toàn cục (global optimization) thay vì tối ưu cục bộ.
+Sử dụng Graph Neural Networks (GNN) để mô hình hóa mạng lưới giao thông và hành vi tài xế.
+Triển khai online learning để mô hình tự thích nghi theo thời gian thực với thay đổi nhu cầu và điều kiện giao thông (Multi-modal transport by bike, delivery)
+Cá nhân hóa giá cước và ETA dựa trên hành vi người dùng (Graph-based ETA prediction)
+Mở rộng kiến trúc dữ liệu & phân tích nâng cao
+Xây dựng Data Lake / Lakehouse phục vụ phân tích lớn và huấn luyện AI.
+Áp dụng Real-time analytics (Apache Flink / Spark Streaming) cho giám sát hệ thống và phát hiện bất thường.
+Phát triển Feature Store dùng chung cho nhiều mô hình AI.
+Đa vùng & toàn cầu hóa hệ thống
+Triển khai multi-region active-active để giảm độ trễ và tăng khả năng chịu lỗi.
+Hỗ trợ multi-currency, multi-language, multi-regulation.
+Tối ưu định tuyến người dùng theo vị trí địa lý (Geo-routing).
+Tăng cường bảo mật & quyền riêng tư
+Áp dụng Confidential Computing cho xử lý dữ liệu nhạy cảm.
+Nghiên cứu Privacy-Preserving Machine Learning (Federated Learning, Differential Privacy).
+Tự động hóa phản ứng sự cố bảo mật (SOAR).
+Tối ưu chi phí & năng lượng
+Áp dụng FinOps để giám sát và tối ưu chi phí cloud.
+Sử dụng spot/preemptible instances cho workload AI.
+Nghiên cứu Green IT nhằm giảm tiêu thụ năng lượng.
+Định hướng nghiên cứu học thuật
+So sánh hiệu quả kiến trúc Microservices với Serverless / Event-native architectures.
+Đánh giá tác động của các mô hình AI khác nhau đến độ công bằng (fairness) trong phân phối chuyến đi.
+Nghiên cứu khả năng áp dụng Digital Twin cho mô phỏng hệ thống giao thông.
+Phụ lục (Appendix)
+Phụ lục A – Mermaid Diagrams
+Tổng thể kiến trúc hệ thống
+Sequence Diagram – AI Matching
+Sequence Diagram – Payment Saga
+Phụ lục B – OpenAPI Specification (FULL)
+Xây dựng mô tả Restful API với OpenAPI 3.0 (OAS yaml file) – đầy đủ tất cả services, có thể import trực tiếp Swagger / Postman
+Phụ lục C – State Machine
+Ride State Machine
+Payment State Machine
+Phụ lục D – Kafka Topics & Event Schema
+Topic
+Producer
+Consumer
+ride.created
+Booking
+Matching, ETA
+ride.assigned
+Matching
+Notification
+driver.location.updated
+Ride
+ETA, Monitoring
+payment.completed
+Payment
+Ride, Wallet
+payment.failed
+Payment
+Notification
+Sample Event (ride.created)
+{
+"eventId": "uuid", "type": "RideCreated", "rideId": "r123",
+"pickup": {"lat":10.7,"lng":106.6},
+"timestamp": "2025-01-01T10:00:00Z"
+}
+Phụ lục E – Threat Model (STRIDE)
+STRIDE
+Threat
+Mitigation
+Spoofing
+Token giả
+JWT + mTLS
+Tampering
+Sửa payload
+TLS + HMAC
+Repudiation
+Chối giao dịch
+Audit log
+Information Disclosure
+Lộ PII
+Encryption
+DoS
+Flood API
+Rate limit, WAF
+Elevation of Privilege
+Leo quyền
+RBAC/ABAC

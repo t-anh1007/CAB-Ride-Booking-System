@@ -1,0 +1,119 @@
+1: Đăng ký user thành công
+2: Đăng nhập trả JWT hợp lệ
+3: Tạo booking với input hợp lệ
+4: Lấy danh sách booking của user
+5: Driver chuyển trạng thái online
+6: Booking được tạo với status =
+7: Gọi
+8: Pricing
+9: Notification gửi thành công
+10: Logout invalidate token
+11: Booking thiếu pickup → lỗi 400User gửi request tạo booking nhưng thiếu
+12: Sai format lat/lng → reject
+13: Driver offline không nhận
+14: Payment method invalid → rejectUser chọn phương thức thanh toán không
+15: ETA với distance = 0 Pickup = Drop {
+16: Pricing với demand_index = 0
+17: Fraud
+18: Token expired → 401
+19: Duplicate booking request
+20: Input quá lớn (payload size test)
+21: Booking → gọi ETA service
+22: Booking → gọi
+23: AI
+24: Booking → Payment →
+25: Kafka event ride_requested được
+26: Driver nhận notification
+27: Booking update trạng thái
+28: MCP context được fetch thành côngAI
+29: API Gateway route đúng serviceRequest đi qua
+30: Retry khi
+31: Transaction tạo booking thành
+32: Rollback khi lỗi giữa chừng Lỗi xảy ra sau khi insert
+33: Payment th ất bại → rollback
+34: Idempotent transaction (duplicate
+35: Concurrent booking (race
+36: Saga transaction – success flow
+37: Saga transaction – failure +
+38: Kafka event consistency (outbox
+39: Partial failure (network issue)
+40: Data integrity (ACID) Transaction phức tạp tương ứng nhiều
+42: Pricing surge > 1 khi demand cao demand cao demand_index = 2 surge > 1
+43: Fraud score > threshold →
+44: Recommendation trả top-3
+45: Forecast trả dữ liệu đúng format dự báo nhu cầu historical data Output đúng schema
+46: Model version được trả về đúng nhiều version model request Trả đúng model_version
+47: AI latency < 200ms service real-time nhiều request latency < SLA (ví dụ 200ms)
+48: Drift detection trigger data thay đổi theo thời gian
+49: Model fallback khi lỗi model lỗi simulate model crash fallback sang rule-based
+50: Input bất thư ờng → model không
+51: Agent chọn driver gần nhất nhiều driver available D1: 5km
+52: Agent chọn driver có rating cao
+53: Agent cân bằng ETA vs price trade-off
+54: Agent gọi đúng tool (ETA vs
+55: Agent xử lý context thiếu dữ liệu thiếu dữ liệu driver Đưa ra một luồng nghiệp vụ có liên
+56: Agent retry khi service lỗi ETA service fail Đưa ra một luồng nghiệp vụ có liên
+57: Agent không chọn driver offline driver list có offline Đưa ra một luồng nghiệp vụ có liên
+58: Agent log decision đầy đủ agent hoạt động Đưa ra một luồng nghiệp vụ có liên
+59: Agent xử lý nhiều request song
+60: Agent fallback rule-based khi
+61: 1000 requests/second booking nhiều user đặt xe cùng lúc
+62: ETA service under load
+63: Pricing service under spike surge giờ cao điểm spike request đột ngột
+64: Kafka throughput test nhiều event (ride_requested) hàng nghìn event/sec
+65: DB connection pool exhaustion quá nhiều connection
+66: Redis cache hit rate > 90% cache được sử dụng nhiều request lặp lại Cache hit rate > 90%
+67: API Gateway rate limit traffic cao vượt threshold
+68: P95 latency < 300ms đo performance
+69: Load test giờ cao điểm mô phỏng giờ cao điểm load tăng dần: Số lượng request
+70: Auto scaling hoạt động hệ thống dùng Kubernetes / Swarm CPU/memory tăng Pod scale up
+71: Driver service down → fallbackDriver
+72: Pricing service timeout → retryPricing chậm hoặc không phản hồi create booking Retry request
+73: Kafka down → buffer event
+74: DB failover
+75: Circuit breaker open
+76: Partial system failure handling Một phần hệ thống lỗi booking flow Phần còn lại vẫn hoạt động
+77: Retry exponential backoff
+78: Service mesh routing fail routing lỗi request qua mesh: (service mesh) là
+79: Network partition test các service không giao tiếp được simulate network split
+80: Graceful degradation hệ thống quá tải hoặc lỗi user request Tắt bớt feature không quan trọng
+81: SQL injection attempt
+82: XSS input test
+83: JWT tampering
+84: Unauthorized
+85: Rate limit attack
+86: Replay attack (idempotency)
+87: Data encryption at rest Dữ liệu lưu trong
+88: mTLS communication Service-to-service communication
+89: RBAC enforcement Role-based access control user role = DRIVER gọi admin
+90: Sensitive data masking
+91: Request không có token
+92: Token không hợp lệ (tampered)
+93: Token hết hạn
+94: Service-to-service authentication
+95: RBAC – user không có quyền
+96: Least privilege (driver không truy
+97: API Gateway kiểm tra tất cả
+98: Rate limiting chống abuse
+99: Data encryption in transit Giao tiếp giữa các service
+100: Audit logging (security trace)
+101: Deploy service thành công
+102: Health check endpoint
+103: Environment variables đúng
+104: Service connect database
+105: Service connect
+106: Rolling update (zero downtime)
+107: Auto scaling (HPA) Tải tăng cao Simulate CPU > threshold Pod scale t ừ 2 → N
+108: Service mesh routing
+109: Config sai → fail fast ENV sai (DB URL sai) DATABASE_URL invalid
+110: Rollback deployment
+111: Logging đầy đủ request
+112: Structured logging format
+113: Metrics được expose
+114: Dashboard hiển thị đúng
+115: Distributed tracing hoạt động
+116: Alert khi error rate cao
+117: Alert khi latency cao
+118: AI service monitoring
+119: Kafka monitoring Event streaming hoạt động Publish ride_requested
+120: Resource monitoring (CPU,

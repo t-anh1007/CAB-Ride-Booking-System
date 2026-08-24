@@ -1,0 +1,392 @@
+{
+  "info": {
+    "_postman_id": "b296e1d4-2029-413f-a2ef-dd429aac90d6",
+    "name": "My Collection",
+    "description": "### Welcome to Postman! This is your first collection. \n\nCollections are your starting point for building and testing APIs. You can use this one to:\n\n• Group related requests\n• Test your API in real-world scenarios\n• Document and share your requests\n\nUpdate the name and overview whenever you’re ready to make it yours.\n\n[Learn more about Postman Collections.](https://learning.postman.com/docs/collections/collections-overview/)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48411309",
+    "_collection_link": "https://go.postman.co/collection/48411309-b296e1d4-2029-413f-a2ef-dd429aac90d6?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "TC21-22",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"destinationAddress\": \"Quận 1, TP.HCM\",\r\n  \"vehicleType\": \"bike\",\r\n  \"pickupLat\": 10.76,\r\n  \"pickupLng\": 106.66,\r\n  \"dropLat\": 10.77,\r\n  \"dropLng\": 106.70\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3101/api/v1/pricing/quote",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3101",
+          "path": [
+            "api",
+            "v1",
+            "pricing",
+            "quote"
+          ]
+        },
+        "description": "This is a GET request and it is used to \"get\" data from an endpoint. There is no request body for a GET request, but you can use query parameters to help specify the resource you want data on (e.g., in this request, we have `id=1`).\n\nA successful GET response will have a `200 OK` status, and should include some kind of response body - for example, HTML web content or JSON data."
+      },
+      "response": []
+    },
+    {
+      "name": "TC 23",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Successful POST request\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "idempotency-key",
+            "value": "{{$guid}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pickup\": {\"lat\": 10.76, \"lng\": 106.66},\n  \"drop\": {\"lat\": 10.77, \"lng\": 106.70},\n  \"vehicleType\": \"bike\",\n  \"paymentMethod\": \"CASH\",\n  \"quoteId\": \"3741a3c7-a1cf-4512-b27a-01838338d0a0\"\n}\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3103/api/v1/bookings",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3103",
+          "path": [
+            "api",
+            "v1",
+            "bookings"
+          ]
+        },
+        "description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+      },
+      "response": []
+    },
+    {
+      "name": "TC 24.1",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"rideId\": \"d07b16ba-7e7a-42fe-8196-4162c1da30c4\",\r\n  \"userId\": \"550e8400-e29b-41d4-a716-446655440000\",\r\n  \"amount\": 89000,\r\n  \"method\": \"CASH\"\r\n}\r\n\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3102/api/v1/payments",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3102",
+          "path": [
+            "api",
+            "v1",
+            "payments"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC 24.2",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3102/api/v1/payments/5abe2530-74eb-45d8-8353-1c0d23a4a320/confirm",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3102",
+          "path": [
+            "api",
+            "v1",
+            "payments",
+            "5abe2530-74eb-45d8-8353-1c0d23a4a320",
+            "confirm"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC 25.1",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "",
+            "value": "",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"pickup\": {\"lat\": 10.76, \"lng\": 106.66},\r\n  \"drop\": {\"lat\": 10.77, \"lng\": 106.70},\r\n  \"vehicleType\": \"bike\",\r\n  \"paymentMethod\": \"CASH\",\r\n  \"quoteId\": \"d71368dd-a6aa-4d72-b7d9-c0b261f8b274\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": ""
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC 27.1",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"status\": \"ACCEPTED\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3103/api/v1/bookings/d07b16ba-7e7a-42fe-8196-4162c1da30c4",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3103",
+          "path": [
+            "api",
+            "v1",
+            "bookings",
+            "d07b16ba-7e7a-42fe-8196-4162c1da30c4"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC 28",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8000/api/v1/mcp/context/d07b16ba-7e7a-42fe-8196-4162c1da30c4",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8000",
+          "path": [
+            "api",
+            "v1",
+            "mcp",
+            "context",
+            "d07b16ba-7e7a-42fe-8196-4162c1da30c4"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "TC 30",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "idempotency-key",
+            "value": "test-fallback-01",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"pickup\": {\r\n    \"lat\": 10.76,\r\n    \"lng\": 106.66\r\n  },\r\n  \"drop\": {\r\n    \"lat\": 10.77,\r\n    \"lng\": 106.70\r\n  },\r\n  \"vehicleType\": \"bike\",\r\n  \"paymentMethod\": \"CASH\",\r\n  \"quoteId\": null\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3103/api/v1/bookings",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3103",
+          "path": [
+            "api",
+            "v1",
+            "bookings"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              " pm.test(\"OTP request accepted\", () => {\r",
+              "  pm.response.to.have.status(202);\r",
+              "  const json = pm.response.json();\r",
+              "  pm.expect(json.success).to.eql(true);\r",
+              "  pm.expect(json.data.debugOtpCode).to.exist;\r",
+              "  pm.environment.set(\"customerOtp\", json.data.debugOtpCode);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"destination\": \"{{customerDestination}}\",\r\n  \"role\": \"customer\",\r\n  \"channel\": \"email\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3109/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3109",
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "customerDestination",
+      "value": ""
+    },
+    {
+      "key": "driverDestination",
+      "value": ""
+    },
+    {
+      "key": "driverId",
+      "value": ""
+    },
+    {
+      "key": "pickupLat",
+      "value": ""
+    },
+    {
+      "key": "pickupLng",
+      "value": ""
+    },
+    {
+      "key": "dropLat",
+      "value": ""
+    },
+    {
+      "key": "dropLng",
+      "value": ""
+    }
+  ]
+}

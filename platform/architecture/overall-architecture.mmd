@@ -1,0 +1,60 @@
+flowchart TB
+  subgraph ClientLayer["Client Layer"]
+    AD["Admin Dashboard<br/>ReactJS"]
+    CA["Customer App<br/>ReactJS"]
+    DA["Driver App<br/>ReactJS"]
+  end
+
+  AD -->|HTTPS| GW
+  CA -->|HTTPS / WebSocket| GW
+  DA -->|HTTPS / WebSocket| GW
+
+  GW["API Gateway<br/>Node.js"]
+
+  subgraph ServiceLayer["Microservices Layer"]
+    PR["Pricing Service"]
+    PAY["Payment Service"]
+    BK["Booking Service"]
+    AU["Auth Service"]
+    US["User Service"]
+    RV["Review Service"]
+    DR["Driver Service"]
+    NO["Notification Service"]
+    RI["Ride Service"]
+  end
+
+  GW --> PR
+  GW --> PAY
+  GW --> BK
+  GW --> AU
+  GW --> US
+  GW --> RV
+  GW --> DR
+  GW --> NO
+  GW --> RI
+
+  subgraph DataLayer["Data Layer"]
+    PG["PostgreSQL"]
+    MG["MongoDB"]
+    RD["Redis"]
+  end
+
+  PR --> PG
+  PAY --> PG
+  BK --> MG
+  AU --> PG
+  US --> PG
+  RV --> PG
+  DR --> PG
+  DR --> RD
+  NO --> MG
+  RI --> MG
+  RI --> RD
+
+  subgraph Broker["Message Broker"]
+    MQ["Kafka"]
+  end
+
+  PAY -->|PaymentSuccess| MQ
+  BK -->|RideCreated| MQ
+  RI -->|RideStatusChanged| MQ

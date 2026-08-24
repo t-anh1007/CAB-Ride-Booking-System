@@ -1,0 +1,95 @@
+node_modules/
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Binaries / junk
+rtk.exe
+*.zip
+
+# Unzipped docx internals
+_rels/
+word/
+docProps/
+\[Content_Types\].xml
+
+# Personal tooling
+.cursor/
+.sisyphus/
+
+# dist/.env
+# .env.*
+# !.env.example
+# !.env.*.example
+
+# # OS / logs
+# .DS_Store
+# Thumbs.db
+# npm-debug.log*
+
+# rtk.exe
+
+# # Ignore everything in .agents
+# .agents/*
+
+# # Keep .agents/skills path
+# !.agents/skills
+# !.agents/skills/
+
+# # Ignore all skills by default
+# .agents/skills/*
+
+# # Keep only these two skills
+# !.agents/skills/cab-security-audit
+# !.agents/skills/cab-security-audit/
+# !.agents/skills/cab-scalability-resilience
+# !.agents/skills/cab-scalability-resilience/
+
+# # Keep all files inside them
+# !.agents/skills/cab-security-audit/**
+# !.agents/skills/cab-scalability-resilience/**
+
+# # Exclude root RULES.md
+# /RULES.md
+
+# .sisyphus/
+# skills-lock.json
+
+# # Python
+# __pycache__/
+# *.pyc
+# *.pyo
+# *.pyd
+# .Python
+# env/
+# venv/
+# .venv/
+# pip-log.txt
+# pip-delete-this-directory.txt
+# .tox/
+# .coverage
+# .coverage.*
+# .cache
+# nosetests.xml
+# coverage.xml
+# *.cover
+# *.log
+# .mypy_cache
+# .pytest_cache
+# .hypothesis
+
+# # IDE
+# .vscode/
+# .idea/
+# *.swp
+# *.swo
+# *~
+
+# CAB_V2.md
+# images
+# *.docx
+# ~$*.docx
+# infra/mtls/dev-certs/

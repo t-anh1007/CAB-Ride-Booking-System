@@ -1,0 +1,105 @@
+**Gateway**
+- `gateway/api-gateway/Dockerfile` được thêm mới để containerize gateway.
+- `[gateway/api-gateway/src/route-registry.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/gateway/api-gateway/src/route-registry.js)` thay đổi khá nhiều:
+  - upstream của service family đổi từ `localhost:port` sang `http://<service-key>:3000`, tức gateway giờ trỏ theo tên service trong Docker/network nội bộ.
+  - thêm các route riêng cho auth-service:
+    - `GET /api/v1/auth/health`
+    - `GET /api/v1/protected/customer`
+    - `GET /api/v1/protected/driver`
+    - `GET /api/v1/protected/admin`
+    - `POST /api/v1/auth/login/otp/request`
+    - `POST /api/v1/auth/login/otp/verify`
+    - `POST /api/v1/auth/login/admin`
+    - `POST /api/v1/auth/mfa/challenge`
+    - `POST /api/v1/auth/oauth/token`
+    - `POST /api/v1/auth/oauth/revoke`
+    - `POST /api/v1/auth/logout`
+    - `POST /api/v1/auth/logout-all`
+  - auth rate limit bị nới từ `5` lên `10000` request/phút.
+  - resolver ưu tiên policy route cụ thể trước family route.
+- `[gateway/api-gateway/src/services/proxy-client.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/gateway/api-gateway/src/services/proxy-client.js)` giờ forward thêm auth context xuống service backend:
+  - `x-auth-subject-id`
+  - `x-auth-role`
+  - `x-auth-account-id`
+  - `x-auth-session-id`
+  - `x-auth-roles`
+  - `x-auth-permissions`
+- `[gateway/api-gateway/src/middleware/authorization.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/gateway/api-gateway/src/middleware/authorization.js)` đổi sang so khớp role không phân biệt hoa thường.
+- `[gateway/api-gateway/src/middleware/auth.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/gateway/api-gateway/src/middleware/auth.js)` có thêm log `Authorization Header` để debug.
+- `[gateway/api-gateway/src/app.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/gateway/api-gateway/src/app.js)` thêm redirect `GET /api/v1/health` về `/health`.
+
+**Auth service**
+- `services/auth-service` gần như được thêm mới hoàn toàn.
+- `services/auth-service/Dockerfile`, `index.js`, `src/server.js` được thêm để service chạy độc lập kiểu CommonJS.
+- `[services/auth-service/src/app.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/services/auth-service/src/app.js)` là thay đổi lớn nhất:
+  - dựng app Express đầy đủ với health-check, request-id, error handling, validate, rate limit.
+  - khởi tạo Postgres, Redis, JWT service, repository layer, bootstrap service, audit service.
+  - có dependency plan để chỉ check Postgres/Redis khi route nào cần.
+  - mount các nhóm route auth, session, JWKS, và protected test routes.
+- `[services/auth-service/src/config/env.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/services/auth-service/src/config/env.js)` và `[services/auth-service/src/config/security.js](D:/hoc/Big Data/DHHTTT18B-N12-cab-system/services/auth-service/src/config/security.js)` thêm toàn bộ cấu hình:
+  - Postgres, Redis
+  - JWT issuer/audience/kid/private key/public key
+  - OTP, MFA, rate limit, admin bootstrap
+- Routes/controller/service mới tạo ra cả một auth domain:
+  - OTP login
+  - admin login
+  - MFA challenge
+  - refresh session
+  - OAuth token/revoke
+  - logout/logout-all
+  - `/.well-known/jwks.json`
+  - `/api/v1/auth/health`
+  - `/api/v1/auth/me`
+  - protected routes cho customer/driver/admin
+- `services/auth-service/sql/schema.sql` thêm schema DB đầy đủ:
+  - `auth_accounts`
+  - `account_roles`
+  - `auth_permissions`
+  - `role_permissions`
+  - `admin_credentials`
+  - `auth_sessions`
+  - `refresh_token_families`
+  - `refresh_tokens`
+  - `audit_logs`
+  - `mfa_enrollments`
+  - `mfa_recovery_codes`
+  - seed sẵn permission/role mapping, gồm `location:update:assigned` cho driver.
+- `services/auth-service/package.json` đổi sang CommonJS entrypoint và thêm deps cho auth thực thụ:
+  - `argon2`
+  - `ioredis`
+  - `jose`
+  - `pg`
+  - `speakeasy`
+  - `zod`
+- Ngoài code runtime, còn có bộ tài liệu/test harness mới:
+  - OpenAPI
+  - Postman collection
+  - Newman runner
+  - dry-run script
+  - các ảnh minh hoạ/test artifacts
+
+**Các service còn lại**
+- `services/user-service`
+  - Dockerfile cũ bị xóa.
+  - Ghi chú lịch sử: trước đây từng dùng `@cab/auth`; hiện tại JWT được enforce tại API Gateway.
+  - thêm `src/auth-context.js` để đọc `x-auth-*` headers từ gateway.
+  - thêm `/internal/users/bootstrap` để bootstrap profile theo `subjectId/accountId`.
+  - `package.json` bỏ `pg`, `zod`, `kafkajs` và chuyển sang entrypoint đơn giản hơn.
+- `services/driver-service`
+  - được viết lại thành service Express tối giản với `index.js`.
+  - thêm `/internal/drivers/bootstrap` và `/health`.
+  - profile driver lưu in-memory bằng `Map`.
+- `services/notification-service`
+  - cũng chuyển sang Express tối giản với `index.js`.
+  - thêm `/internal/notifications/otp` để nhận request gửi OTP.
+  - có validate body và envelope response chuẩn hóa.
+- `services/ride-service`
+  - thêm `index.js` mới và `src/abac.js`.
+  - endpoint update location của driver giờ bị chặn bằng ABAC:
+    - phải là `driver`
+    - phải có permission `location:update:assigned`
+    - ride phải `ACTIVE`
+    - `subjectId` phải khớp `assignedDriverSubjectId`
+  - admin được bypass rule này.
+  - test `abac.test.js` được thêm.
+  - `package.json` bỏ `kafkajs`, chỉ giữ Express.

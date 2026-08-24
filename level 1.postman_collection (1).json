@@ -1,0 +1,82 @@
+{
+	"id": "857ba62b-fbc0-4170-9ab2-9a12f91a61f0",
+	"name": "New Environment",
+	"values": [
+		{
+			"key": "baseUrl",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "customerOtp",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "customerAccessToken",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "customerRefreshToken",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "customerUserId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "driverOtp",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "driverAccessToken",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "driverSubjectId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "quoteId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "lockedAmount",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "distanceKm",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "bookingId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		}
+	],
+	"color": null,
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2026-04-25T05:53:29.968Z",
+	"_postman_exported_using": "Postman/11.92.0"
+}

@@ -1,0 +1,59 @@
+flowchart TB
+  subgraph clientApps["Client Apps"]
+    driverApp["Driver App"]
+    customerApp["Customer App"]
+  end
+
+  subgraph coreServices["Core Services"]
+    driverService["Driver Service"]
+    bookingService["Booking Service"]
+    pricingService["Pricing Service"]
+  end
+
+  subgraph dataSources["Data Sources"]
+    gps["GPS / Location Data"]
+    trip["Trip History"]
+    rating["Ratings & Feedback"]
+  end
+
+  subgraph aiLayer["AI / ML Layer"]
+    matching["Matching Service\nAI Driver Matching"]
+    eta["ETA Prediction Model"]
+    surge["Surge Pricing Model"]
+  end
+
+  subgraph mlPlatform["ML Platform"]
+    feature["Feature Store"]
+    training["Model Training"]
+    serving["Model Serving API"]
+  end
+
+  driverApp --> driverService
+  customerApp --> bookingService
+  bookingService --> pricingService
+
+  driverService --> matching
+  bookingService --> matching
+  driverService --> eta
+  bookingService --> eta
+  bookingService --> surge
+  pricingService --> surge
+
+  gps --> matching
+  gps --> eta
+  gps --> feature
+  trip --> matching
+  trip --> eta
+  trip --> surge
+  trip --> feature
+  rating --> matching
+  rating --> feature
+
+  feature --> training --> serving
+  serving --> matching
+  serving --> eta
+  serving --> surge
+
+  matching -->|Best Driver| bookingService
+  surge -->|Dynamic Fare| pricingService
+  eta -->|ETA Result| customerApp

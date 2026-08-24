@@ -1,0 +1,15 @@
+{
+  "name": "@cab/review-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "kafkajs": "^2.2.4",
+    "express": "^4.21.2",
+    "uuid": "^13.0.0"
+  }
+}

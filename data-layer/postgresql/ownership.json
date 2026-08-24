@@ -1,0 +1,10 @@
+{
+  "services": [
+    "pricing-service",
+    "payment-service",
+    "auth-service",
+    "user-service",
+    "review-service",
+    "driver-service"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "services": [
+    "booking-service",
+    "notification-service",
+    "ride-service"
+  ]
+}

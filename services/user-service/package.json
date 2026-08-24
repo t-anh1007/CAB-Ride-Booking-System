@@ -1,0 +1,16 @@
+{
+  "name": "@cab/user-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file=.env src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.16.0",
+    "zod": "^3.24.4"
+  }
+}

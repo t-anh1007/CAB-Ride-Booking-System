@@ -1,0 +1,98 @@
+flowchart TB
+  subgraph VirtualBox["VirtualBox Cluster"]
+    subgraph RegionPrimary["Primary Region"]
+      M1["swarm-manager-1\n tier=edge\n region=primary"]
+      A1["swarm-worker-app-1\n tier=app\n region=primary"]
+      D1["swarm-worker-data-1\n tier=data\n region=primary"]
+    end
+
+    subgraph RegionSecondary["Secondary Region"]
+      A2["swarm-worker-app-2\n tier=app\n region=secondary"]
+    end
+  end
+
+  subgraph EdgeLayer["Edge Layer"]
+    AD["admin-dashboard"]
+    CA["customer-app"]
+    DA["driver-app"]
+    GW["api-gateway xN"]
+  end
+
+  subgraph ServiceLayer["Microservices Layer"]
+    PR["pricing-service xN"]
+    PAY["payment-service xN"]
+    BK["booking-service xN"]
+    AU["auth-service xN"]
+    US["user-service xN"]
+    RV["review-service xN"]
+    DR["driver-service xN"]
+    NO["notification-service xN"]
+    RI["ride-service xN"]
+  end
+
+  subgraph DataLayer["Data and Event Layer"]
+    MQ["kafka"]
+    PG["postgres"]
+    MG["mongodb"]
+    RD["redis"]
+  end
+
+  M1 --> AD
+  M1 --> CA
+  M1 --> DA
+  M1 --> GW
+
+  A1 --> PR
+  A1 --> PAY
+  A1 --> BK
+  A1 --> AU
+  A1 --> US
+  A1 --> RV
+  A1 --> DR
+  A1 --> NO
+  A1 --> RI
+
+  A2 --> PR
+  A2 --> PAY
+  A2 --> BK
+  A2 --> AU
+  A2 --> US
+  A2 --> RV
+  A2 --> DR
+  A2 --> NO
+  A2 --> RI
+
+  D1 --> MQ
+  D1 --> PG
+  D1 --> MG
+  D1 --> RD
+
+  GW --> PR
+  GW --> PAY
+  GW --> BK
+  GW --> AU
+  GW --> US
+  GW --> RV
+  GW --> DR
+  GW --> NO
+  GW --> RI
+
+  PR --> MQ
+  PAY --> MQ
+  BK --> MQ
+  AU --> MQ
+  US --> MQ
+  RV --> MQ
+  DR --> MQ
+  NO --> MQ
+  RI --> MQ
+
+  PR --> PG
+  PAY --> PG
+  BK --> MG
+  AU --> PG
+  US --> PG
+  RV --> PG
+  DR --> RD
+  NO --> MG
+  RI --> RD

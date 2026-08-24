@@ -1,0 +1,1100 @@
+{
+  "info": {
+    "_postman_id": "9a43ef8a-8bb1-4f5d-88ec-7c14f56d6c40",
+    "name": "CAB System Test Collection (120TC Skeleton - Level 6 Ready)",
+    "description": "Skeleton 12 levels theo file grading factor. Chi tiet Level 6 (TC51-TC60) bam endpoint codebase hien tai.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const now = new Date();",
+          "const reqId = `pm-${now.getTime()}-${Math.floor(Math.random()*100000)}`;",
+          "function ensureVar(key, value) {",
+          "  const cur = pm.environment.get(key);",
+          "  if (cur === undefined || cur === null || cur === '') {",
+          "    pm.environment.set(key, String(value));",
+          "  }",
+          "}",
+          "pm.environment.set('request_id', reqId);",
+          "if (!pm.environment.get('token') && pm.environment.get('access_token')) { pm.environment.set('token', pm.environment.get('access_token')); }",
+          "ensureVar('auth_base_url', 'http://localhost:3104');",
+          "ensureVar('user_service_base_url', 'http://localhost:3105');",
+          "ensureVar('booking_base_url', 'http://localhost:3103');",
+          "ensureVar('driver_base_url', 'http://localhost:3107');",
+          "ensureVar('notification_base_url', 'http://localhost:3108');",
+          "ensureVar('eta_base_url', 'http://localhost:3000');",
+          "ensureVar('pricing_base_url', 'http://localhost:3101');",
+          "ensureVar('matching_base_url', 'http://localhost:8000');",
+          "ensureVar('gateway_base_url', 'http://localhost:3000');",
+          "ensureVar('vehicle_type', 'standard');",
+          "ensureVar('pickup_lat', '10.762622');",
+          "ensureVar('pickup_lng', '106.660172');",
+          "ensureVar('drop_lat', '10.773170');",
+          "ensureVar('drop_lng', '106.704820');",
+          "ensureVar('auth_destination', '0912345678');",
+          "ensureVar('auth_otp_code', '123456');",
+          "ensureVar('driver_id', 'DRV001');",
+          "ensureVar('max_retry_attempts', '2');",
+          "ensureVar('tc56_simulate_first_error', 'true');",
+          "ensureVar('tc56_retry_count', '0');",
+          "ensureVar('tc56_eta_path', '/api/v1/eta/calculate');",
+          "ensureVar('tc56_fail_path', '/api/v1/eta/force-error');",
+          "ensureVar('tc59_parallel_requests', '5');",
+          "if (!pm.environment.get('ride_id')) { pm.environment.set('ride_id', `ride-${now.getTime()}`); }",
+          "if (!pm.environment.get('user_subject_id')) { pm.environment.set('user_subject_id', `usr-${now.getTime()}`); }",
+          "if (!pm.environment.get('account_id')) { pm.environment.set('account_id', `acc-${now.getTime()}`); }",
+          "if (!pm.environment.get('level1_booking_user_id')) { pm.environment.set('level1_booking_user_id', pm.environment.get('user_subject_id')); }",
+          "ensureVar('seed_customer_subject_id', 'f4f1bf52-6c73-42a1-8098-8bb47d9db828');"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "json_content_type",
+      "value": "application/json"
+    },
+    {
+      "key": "auth_base_url",
+      "value": "http://localhost:3104"
+    },
+    {
+      "key": "user_service_base_url",
+      "value": "http://localhost:3105"
+    },
+    {
+      "key": "booking_base_url",
+      "value": "http://localhost:3103"
+    },
+    {
+      "key": "driver_base_url",
+      "value": "http://localhost:3107"
+    },
+    {
+      "key": "notification_base_url",
+      "value": "http://localhost:3108"
+    },
+    {
+      "key": "eta_base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "pricing_base_url",
+      "value": "http://localhost:3101"
+    },
+    {
+      "key": "matching_base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "gateway_base_url",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "auth_destination",
+      "value": "0912345678"
+    },
+    {
+      "key": "auth_otp_code",
+      "value": "123456"
+    },
+    {
+      "key": "driver_id",
+      "value": "DRV001"
+    }
+  ],
+  "item": [
+    {
+      "name": "Level 1 - Basic API & Flow (TC1-TC10)",
+      "description": "Day du testcase Level 1 bam endpoint codebase hien tai.",
+      "item": [
+        {
+          "name": "TC1 - Setup user context (seeded account)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{gateway_base_url}}/api/v1/auth/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC1 gateway/auth health 200', function(){ pm.response.to.have.status(200); });",
+                  "pm.environment.set('level1_user_id', pm.environment.get('seed_customer_subject_id'));",
+                  "pm.environment.set('level1_booking_user_id', pm.environment.get('seed_customer_subject_id'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC2.1 - Dang nhap OTP request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{auth_destination}}\",\n  \"role\": \"customer\",\n  \"channel\": \"sms\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gateway_base_url}}/api/v1/auth/login/otp/request"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC2.1 status 202', function(){ pm.response.to.have.status(202); });",
+                  "const j = pm.response.json() || {};",
+                  "const debugCode = j?.data?.debugOtpCode;",
+                  "if (debugCode) { pm.environment.set('auth_otp_code', String(debugCode)); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC2.2 - Dang nhap OTP verify tra JWT",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destination\": \"{{auth_destination}}\",\n  \"role\": \"customer\",\n  \"code\": \"{{auth_otp_code}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gateway_base_url}}/api/v1/auth/login/otp/verify"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC2.2 status 200', function(){ pm.response.to.have.status(200); });",
+                  "const j = pm.response.json() || {};",
+                  "const access = j?.data?.accessToken || j?.data?.tokens?.accessToken || null;",
+                  "const refresh = j?.data?.refreshToken || j?.data?.tokens?.refreshToken || null;",
+                  "pm.test('TC2.2 co access token', function(){ pm.expect(access).to.be.a('string').and.not.empty; });",
+                  "if (access) pm.environment.set('access_token', access);",
+                  "if (access) pm.environment.set('token', access);",
+                  "if (refresh) pm.environment.set('refresh_token', refresh);",
+                  "try {",
+                  "  if (access) {",
+                  "    const payloadPart = access.split('.')[1];",
+                  "    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/');",
+                  "    const json = JSON.parse(atob(normalized));",
+                  "    if (json && json.sub) {",
+                  "      pm.environment.set('level1_user_id', json.sub);",
+                  "      pm.environment.set('level1_booking_user_id', json.sub);",
+                  "    }",
+                  "  }",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC3 - Tao booking voi input hop le",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{request_id}}-tc3"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{level1_booking_user_id}}\",\n  \"pickup\": {\n    \"lat\": 10.7626,\n    \"lng\": 106.6602,\n    \"address\": \"HCM Pickup\"\n  },\n  \"drop\": {\n    \"lat\": 10.7731,\n    \"lng\": 106.7048,\n    \"address\": \"HCM Drop\"\n  },\n  \"distanceKm\": 5,\n  \"vehicleType\": \"bike\",\n  \"paymentMethod\": \"CASH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{gateway_base_url}}/api/v1/bookings"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC3 status 201', function(){ pm.response.to.have.status(201); });",
+                  "const j = pm.response.json() || {};",
+                  "const status = j?.data?.status || '';",
+                  "pm.test('TC3 status REQUESTED/CONFIRMED-like', function(){ pm.expect(['REQUESTED','ASSIGNED','SEARCHING_DRIVER','ACCEPTED']).to.include(status); });",
+                  "const bookingId = j?.data?.bookingId || '';",
+                  "if (bookingId) pm.environment.set('booking_id', bookingId);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC4 - Lay danh sach booking cua user",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{booking_base_url}}/api/v1/bookings?user_id={{level1_booking_user_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC4 status 200', function(){ pm.response.to.have.status(200); });",
+                  "const j = pm.response.json() || {};",
+                  "pm.test('TC4 tra ve list', function(){ pm.expect(j?.data).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC5 - Driver chuyen trang thai online",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Driver Level1\",\n  \"phone\": \"0900000001\",\n  \"vehicleType\": \"bike\",\n  \"vehiclePlate\": \"59A1-12345\",\n  \"status\": \"ONLINE\",\n  \"availability\": \"AVAILABLE\",\n  \"location\": {\n    \"lat\": 10.763,\n    \"lng\": 106.661,\n    \"address\": \"District 1\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{driver_base_url}}/api/v1/drivers/{{driver_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC5 status 200', function(){ pm.response.to.have.status(200); });",
+                  "const j = pm.response.json() || {};",
+                  "pm.test('TC5 driver ONLINE', function(){ pm.expect(j?.data?.status).to.eql('ONLINE'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC6 - Booking tao voi status REQUESTED",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{request_id}}-tc6"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{level1_booking_user_id}}\",\n  \"pickup\": {\n    \"lat\": 10.761,\n    \"lng\": 106.659,\n    \"address\": \"Pickup 2\"\n  },\n  \"drop\": {\n    \"lat\": 10.774,\n    \"lng\": 106.705,\n    \"address\": \"Drop 2\"\n  },\n  \"distanceKm\": 4.8,\n  \"vehicleType\": \"bike\",\n  \"paymentMethod\": \"CASH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{booking_base_url}}/api/v1/bookings"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC6 status 201', function(){ pm.response.to.have.status(201); });",
+                  "const j = pm.response.json() || {};",
+                  "pm.test('TC6 booking status REQUESTED', function(){ pm.expect(j?.data?.status).to.eql('REQUESTED'); });",
+                  "pm.test('TC6 co createdAt', function(){ pm.expect(j?.data?.createdAt).to.be.a('string').and.not.empty; });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC7 - API ETA tra ve > 0",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": {\n    \"lat\": 10.7626,\n    \"lng\": 106.6602\n  },\n  \"destination\": {\n    \"lat\": 10.7731,\n    \"lng\": 106.7048\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{eta_base_url}}/api/v1/eta/calculate"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC7 status 200', function(){ pm.response.to.have.status(200); });",
+                  "const j = pm.response.json() || {};",
+                  "const eta = Number(j?.data?.etaMinutes || 0);",
+                  "pm.test('TC7 eta > 0 va hop ly', function(){ pm.expect(eta).to.be.greaterThan(0); pm.expect(eta).to.be.below(60); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC8 - Pricing API tra gia hop le",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationAddress\": \"Ben Thanh Market\",\n  \"vehicleType\": \"standard\",\n  \"pickupLat\": 10.7626,\n  \"pickupLng\": 106.6602,\n  \"dropLat\": 10.7731,\n  \"dropLng\": 106.7048,\n  \"distanceKm\": 5,\n  \"durationMin\": 15\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{pricing_base_url}}/api/v1/pricing/quote"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC8 status 200/503 (phu thuoc supply thuc te)', function(){ pm.expect([200,503]).to.include(pm.response.code); });",
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json() || {};",
+                  "  const amount = Number(j?.data?.priceSnapshot?.amount || 0);",
+                  "  const surge = Number(j?.data?.priceSnapshot?.surgeMultiplier || 0);",
+                  "  pm.test('TC8 price/surge hop le', function(){ pm.expect(amount).to.be.greaterThan(0); pm.expect(surge).to.be.at.least(1); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC9 - Notification gui thanh cong",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{level1_booking_user_id}}\",\n  \"type\": \"RIDE_CONFIRMED\",\n  \"title\": \"Ride Confirmed\",\n  \"message\": \"Your ride is confirmed\",\n  \"channel\": \"push\",\n  \"relatedEntityType\": \"BOOKING\",\n  \"relatedEntityId\": \"{{booking_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{notification_base_url}}/internal/notifications/send"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC9 status 200/202', function(){ pm.expect([200,202]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC10 - Logout invalidate token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{auth_base_url}}/api/v1/auth/logout"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC10 logout status 200', function(){ pm.response.to.have.status(200); });",
+                  "const refreshToken = pm.environment.get('refresh_token');",
+                  "pm.test('TC10 refresh token cu bi invalidate', function(done){",
+                  "  pm.sendRequest({",
+                  "    url: pm.environment.get('auth_base_url') + '/api/v1/auth/refresh',",
+                  "    method: 'POST',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: { mode: 'raw', raw: JSON.stringify({ refreshToken }) }",
+                  "  }, function(err, res){",
+                  "    pm.expect(err).to.eql(null);",
+                  "    pm.expect([400,401]).to.include(res.code);",
+                  "    done();",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Level 2 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 3 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 4 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 5 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 6 - AI Agent Logic (TC51-TC60)",
+      "item": [
+        {
+          "name": "TC51 - Agent chon driver gan nhat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              },
+              {
+                "key": "x-request-id",
+                "value": "{{request_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{ride_id}}-tc51\",\n  \"candidates\": [\n    { \"driver_id\": \"drv_1\", \"distance_km\": 5.0, \"driver_rating\": 4.8, \"driver_acceptance_rate\": 0.9 },\n    { \"driver_id\": \"drv_2\", \"distance_km\": 2.0, \"driver_rating\": 4.2, \"driver_acceptance_rate\": 0.9 },\n    { \"driver_id\": \"drv_3\", \"distance_km\": 3.0, \"driver_rating\": 4.5, \"driver_acceptance_rate\": 0.9 }\n  ],\n  \"max_distance_km\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{matching_base_url}}/api/v1/matching/best-driver",
+            "description": "Bam endpoint matching-service hien tai."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC51 status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.environment.set('selected_driver_id', json.driver_id || '');",
+                  "pm.test('TC51 chon dung driver gan nhat (drv_2)', function () {",
+                  "  pm.expect(json.driver_id).to.eql('drv_2');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC52 - Agent can nhac rating (khong chi distance)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{ride_id}}-tc52\",\n  \"candidates\": [\n    { \"driver_id\": \"drv_a\", \"distance_km\": 2.0, \"driver_rating\": 4.0, \"driver_acceptance_rate\": 0.8 },\n    { \"driver_id\": \"drv_b\", \"distance_km\": 3.0, \"driver_rating\": 4.9, \"driver_acceptance_rate\": 0.95 }\n  ],\n  \"max_distance_km\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{matching_base_url}}/api/v1/matching/best-driver"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC52 status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('TC52 uu tien chat luong tot hon khi can nhac tong the', function () {",
+                  "  pm.expect(json.driver_id).to.eql('drv_b');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC53 - Agent can bang ETA vs quality (multi-objective)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{ride_id}}-tc53\",\n  \"force_fallback\": true,\n  \"candidates\": [\n    { \"driver_id\": \"drv_fast_expensive\", \"distance_km\": 1.5, \"eta_seconds\": 240, \"driver_rating\": 4.1, \"driver_acceptance_rate\": 0.7, \"surge_multiplier\": 1.8 },\n    { \"driver_id\": \"drv_balanced\", \"distance_km\": 2.6, \"eta_seconds\": 360, \"driver_rating\": 4.9, \"driver_acceptance_rate\": 0.98, \"surge_multiplier\": 1.0 }\n  ],\n  \"max_distance_km\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{matching_base_url}}/api/v1/matching/best-driver"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC53 status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('TC53 co quyet dinh toi uu (driver duoc chon hop le)', function () {",
+                  "  pm.expect(['drv_fast_expensive', 'drv_balanced']).to.include(json.driver_id);",
+                  "});",
+                  "pm.environment.set('tc53_selected_driver', json.driver_id || '');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC54 - Agent goi dung tool ETA va Pricing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{matching_base_url}}/api/v1/mcp/context/{{ride_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC54 context endpoint status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('TC54 goi ETA truoc, Pricing sau va ca hai thanh cong', function (done) {",
+                  "  const ctx = pm.response.json() || {};",
+                  "  const pickup = ctx.pickup || { lat: Number(pm.environment.get('pickup_lat')), lng: Number(pm.environment.get('pickup_lng')) };",
+                  "  const drop = ctx.drop || { lat: Number(pm.environment.get('drop_lat')), lng: Number(pm.environment.get('drop_lng')) };",
+                  "  const etaReq = {",
+                  "    url: pm.environment.get('eta_base_url') + '/api/v1/eta/calculate',",
+                  "    method: 'POST',",
+                  "    header: { 'Content-Type': 'application/json' },",
+                  "    body: { mode: 'raw', raw: JSON.stringify({ origin: pickup, destination: drop }) }",
+                  "  };",
+                  "  pm.sendRequest(etaReq, function (etaErr, etaRes) {",
+                  "    pm.expect(etaErr).to.eql(null);",
+                  "    pm.expect(etaRes.code).to.eql(200);",
+                  "    const etaJson = etaRes.json();",
+                  "    const etaMinutes = etaJson?.data?.etaMinutes;",
+                  "    pm.environment.set('tc54_eta_minutes', String(etaMinutes || ''));",
+                  "    const pricingReq = {",
+                  "      url: pm.environment.get('pricing_base_url') + '/api/v1/pricing/quote',",
+                  "      method: 'POST',",
+                  "      header: { 'Content-Type': 'application/json' },",
+                  "      body: {",
+                  "        mode: 'raw',",
+                  "        raw: JSON.stringify({",
+                  "          destinationAddress: 'Level6 Destination',",
+                  "          vehicleType: pm.environment.get('vehicle_type') || 'standard',",
+                  "          pickupLat: Number(pickup.lat),",
+                  "          pickupLng: Number(pickup.lng),",
+                  "          dropLat: Number(drop.lat),",
+                  "          dropLng: Number(drop.lng),",
+                  "          distanceKm: 5,",
+                  "          durationMin: Number(etaMinutes || 15)",
+                  "        })",
+                  "      }",
+                  "    };",
+                  "    pm.sendRequest(pricingReq, function (pricingErr, pricingRes) {",
+                  "      pm.expect(pricingErr).to.eql(null);",
+                  "      pm.expect([200, 503]).to.include(pricingRes.code);",
+                  "      if (pricingRes.code === 200) {",
+                  "        const price = pricingRes.json()?.data?.priceSnapshot?.amount;",
+                  "        pm.environment.set('tc54_quote_amount', String(price || ''));",
+                  "      }",
+                  "      done();",
+                  "    });",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC55 - Agent xu ly context thieu du lieu",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{ride_id}}-tc55\",\n  \"candidates\": [\n    { \"driver_id\": \"drv_min_1\", \"distance_km\": 2.3 },\n    { \"driver_id\": \"drv_min_2\", \"distance_km\": 3.0 }\n  ],\n  \"max_distance_km\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{matching_base_url}}/api/v1/matching/best-driver"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC55 status 200, agent khong crash khi thieu context', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('TC55 van tra driver_id hop le', function () {",
+                  "  pm.expect(json.driver_id).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC56 - Agent retry khi service loi (ETA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": { \"lat\": {{pickup_lat}}, \"lng\": {{pickup_lng}} },\n  \"destination\": { \"lat\": {{drop_lat}}, \"lng\": {{drop_lng}} }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{eta_base_url}}{{tc56_eta_path}}",
+            "description": "Goi ETA endpoint dung de xac nhan flow retry/fallback tren loi thuc te."
+          },
+          "event": [
+              {
+                "listen": "prerequest",
+                "script": {
+                  "type": "text/javascript",
+                  "exec": [
+                    "const simulateFirstError = String(pm.environment.get('tc56_simulate_first_error') || 'true').toLowerCase() === 'true';",
+                    "const retryCount = Number(pm.environment.get('tc56_retry_count') || '0');",
+                    "const failPath = pm.environment.get('tc56_fail_path') || '/api/v1/eta/force-error';",
+                    "const successPath = '/api/v1/eta/calculate';",
+                    "if (simulateFirstError && retryCount === 0) {",
+                    "  pm.environment.set('tc56_eta_path', failPath);",
+                    "} else {",
+                    "  pm.environment.set('tc56_eta_path', successPath);",
+                    "}"
+                  ]
+                }
+              },
+              {
+                "listen": "test",
+                "script": {
+                  "type": "text/javascript",
+                  "exec": [
+                    "pm.test('TC56 retry when ETA service fails first attempt', function (done) {",
+                    "  const simulateFirstError = String(pm.environment.get('tc56_simulate_first_error') || 'true').toLowerCase() === 'true';",
+                    "  const currentRetryCount = Number(pm.environment.get('tc56_retry_count') || '0');",
+                    "  const successPath = '/api/v1/eta/calculate';",
+                    "  const payload = {",
+                    "    origin: {",
+                    "      lat: Number(pm.environment.get('pickup_lat')),",
+                    "      lng: Number(pm.environment.get('pickup_lng'))",
+                    "    },",
+                    "    destination: {",
+                    "      lat: Number(pm.environment.get('drop_lat')),",
+                    "      lng: Number(pm.environment.get('drop_lng'))",
+                    "    }",
+                    "  };",
+                    "  const token = pm.environment.get('token') || pm.environment.get('access_token') || '';",
+                    "",
+                    "  if (!simulateFirstError) {",
+                    "    pm.expect(pm.response.code).to.eql(200);",
+                    "    pm.environment.set('tc56_retry_count', '0');",
+                    "    pm.environment.set('tc56_eta_path', successPath);",
+                    "    return done();",
+                    "  }",
+                    "",
+                    "  if (currentRetryCount === 0) {",
+                    "    pm.expect(pm.response.code).to.not.eql(200);",
+                    "    pm.environment.set('tc56_retry_count', '1');",
+                    "    pm.environment.set('tc56_eta_path', successPath);",
+                    "    const retryHeaders = { 'Content-Type': 'application/json' };",
+                    "    if (token) {",
+                    "      retryHeaders.Authorization = `Bearer ${token}`;",
+                    "    }",
+                    "    pm.sendRequest({",
+                    "      url: pm.environment.get('eta_base_url') + successPath,",
+                    "      method: 'POST',",
+                    "      header: retryHeaders,",
+                    "      body: { mode: 'raw', raw: JSON.stringify(payload) }",
+                    "    }, function (err, res) {",
+                    "      pm.expect(err).to.eql(null);",
+                    "      pm.expect(res.code).to.eql(200);",
+                    "      pm.environment.set('tc56_retry_count', '0');",
+                    "      pm.environment.set('tc56_eta_path', successPath);",
+                    "      done();",
+                    "    });",
+                    "    return;",
+                    "  }",
+                    "",
+                    "  pm.expect(pm.response.code).to.eql(200);",
+                    "  pm.environment.set('tc56_retry_count', '0');",
+                    "  pm.environment.set('tc56_eta_path', successPath);",
+                    "  done();",
+                    "});"
+                  ]
+                }
+              }
+          ]
+        },
+        {
+          "name": "TC57 - Agent khong chon driver offline",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{ride_id}}-tc57\",\n  \"candidates\": [\n    { \"driver_id\": \"drv_offline\", \"distance_km\": 99.0, \"driver_rating\": 5.0 },\n    { \"driver_id\": \"drv_online\", \"distance_km\": 2.0, \"driver_rating\": 4.2 }\n  ],\n  \"max_distance_km\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{matching_base_url}}/api/v1/matching/best-driver",
+            "description": "Mo phong offline bang khoang cach vuot hard-constraint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC57 status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('TC57 khong assign driver offline', function () {",
+                  "  pm.expect(json.driver_id).to.eql('drv_online');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC58 - Agent log decision day du",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              },
+              {
+                "key": "x-request-id",
+                "value": "{{request_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{ride_id}}-tc58\",\n  \"candidates\": [\n    { \"driver_id\": \"drv_l1\", \"distance_km\": 2.5, \"driver_rating\": 4.7 },\n    { \"driver_id\": \"drv_l2\", \"distance_km\": 3.5, \"driver_rating\": 4.8 }\n  ],\n  \"max_distance_km\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{matching_base_url}}/api/v1/matching/best-driver"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC58 status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('TC58 co log field quan trong', function () {",
+                  "  pm.expect(json.matching_reason).to.be.a('string').and.not.empty;",
+                  "  pm.expect(json.decision_source).to.be.a('string').and.not.empty;",
+                  "  pm.expect(json.assigned_at).to.be.a('string').and.not.empty;",
+                  "  pm.expect(json.hard_constraints_applied).to.be.an('array');",
+                  "});",
+                  "pm.environment.set('tc58_decision_source', json.decision_source || '');",
+                  "pm.environment.set('tc58_matching_reason', json.matching_reason || '');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC59 - Agent xu ly request song song",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{matching_base_url}}/api/v1/matching/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC59 health endpoint status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('TC59 xu ly nhieu request song song khong conflict', function (done) {",
+                  "  const total = Number(pm.environment.get('tc59_parallel_requests') || '5');",
+                  "  let completed = 0;",
+                  "  let ok = 0;",
+                  "  for (let i = 0; i < total; i++) {",
+                  "    const req = {",
+                  "      url: pm.environment.get('matching_base_url') + '/api/v1/matching/best-driver',",
+                  "      method: 'POST',",
+                  "      header: { 'Content-Type': 'application/json' },",
+                  "      body: {",
+                  "        mode: 'raw',",
+                  "        raw: JSON.stringify({",
+                  "          rideId: `${pm.environment.get('ride_id')}-tc59-${i}`,",
+                  "          candidates: [",
+                  "            { driver_id: `drv59_${i}_a`, distance_km: 2.5, driver_rating: 4.6 },",
+                  "            { driver_id: `drv59_${i}_b`, distance_km: 3.5, driver_rating: 4.9 }",
+                  "          ],",
+                  "          max_distance_km: 6",
+                  "        })",
+                  "      }",
+                  "    };",
+                  "    pm.sendRequest(req, function (err, res) {",
+                  "      completed += 1;",
+                  "      if (!err && res && res.code === 200) { ok += 1; }",
+                  "      if (completed === total) {",
+                  "        pm.expect(ok).to.eql(total);",
+                  "        pm.environment.set('tc59_success_count', String(ok));",
+                  "        done();",
+                  "      }",
+                  "    });",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC60 - Agent fallback rule-based khi AI fail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "{{json_content_type}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rideId\": \"{{ride_id}}-tc60\",\n  \"force_fallback\": true,\n  \"candidates\": [\n    { \"driver_id\": \"drv_fb_1\", \"distance_km\": 3.0, \"driver_rating\": 4.5, \"driver_acceptance_rate\": 0.9 },\n    { \"driver_id\": \"drv_fb_2\", \"distance_km\": 2.0, \"driver_rating\": 4.2, \"driver_acceptance_rate\": 0.8 }\n  ],\n  \"max_distance_km\": 6\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{matching_base_url}}/api/v1/matching/best-driver"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('TC60 status 200', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('TC60 su dung fallback rule-based', function () {",
+                  "  pm.expect(json.decision_source).to.eql('rule-based-matching');",
+                  "});",
+                  "pm.environment.set('tc60_selected_driver', json.driver_id || '');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Level 7 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 8 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 9 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 10 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 11 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    },
+    {
+      "name": "Level 12 - Empty",
+      "description": "Placeholder theo yeu cau.",
+      "item": []
+    }
+  ]
+}

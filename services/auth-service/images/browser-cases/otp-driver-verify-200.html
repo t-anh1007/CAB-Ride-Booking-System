@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>[OTP Driver] Verify OTP</title>
+<style>
+  body{font-family:Segoe UI,system-ui,sans-serif;margin:0;padding:20px;background:#121212;color:#e0e0e0;}
+  h1{font-size:1.1rem;color:#4fc3f7;margin:0 0 8px;}
+  .status{font-size:0.95rem;color:#81c784;margin-bottom:12px;}
+  pre{white-space:pre-wrap;word-break:break-all;background:#1e1e1e;padding:14px;border-radius:8px;border:1px solid #333;font-size:12px;line-height:1.4;}
+  code{color:#ffcc80;}
+</style></head>
+<body>
+  <h1>[OTP Driver] Verify OTP</h1>
+  <div class="status">HTTP 200</div>
+  
+  <pre>{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "authStatus": "verified",
+    "message": "OTP verified successfully.",
+    "account": {
+      "id": "68392d86-d904-454a-a452-5c32862a7904",
+      "subject_id": "349423ae-075a-48ac-b03c-6a68a30171ee",
+      "destination": "+84900000002",
+      "destination_type": "phone",
+      "status": "active",
+      "last_login_at": null,
+      "created_at": "2026-04-10T04:27:41.030Z",
+      "updated_at": "2026-04-10T04:27:41.030Z",
+      "roles": [
+        "driver"
+      ]
+    },
+    "bootstrap": {
+      "status": "success",
+      "service": "driver-service",
+      "profile": {
+        "profileId": "e527907c-c167-4ea6-b381-7d4c9e0cacf9",
+        "subjectId": "349423ae-075a-48ac-b03c-6a68a30171ee",
+        "accountId": "68392d86-d904-454a-a452-5c32862a7904",
+        "status": "pending_profile",
+        "createdAt": "2026-04-10T04:27:41.514Z"
+      },
+      "idempotent": true
+    },
+    "tokens": {
+      "tokenType": "Bearer",
+      "accessToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImF1dGgta2V5LWxvY2FsLTEiLCJ0eXAiOiJKV1QifQ.eyJ0eXAiOiJhY2Nlc3MiLCJzdWIiOiIzNDk0MjNhZS0wNzVhLTQ4YWMtYjAzYy02YTY4YTMwMTcxZWUiLCJzaWQiOiI1Nzg3YTQxOC0yZDJmLTRlM2UtYWFlYS1hNTc5YWFiNzQ0YmMiLCJhaWQiOiI2ODM5MmQ4Ni1kOTA0LTQ1NGEtYTQ1Mi01YzMyODYyYTc5MDQiLCJyb2xlIjoiZHJpdmVyIiwicm9sZXMiOlsiZHJpdmVyIl0sInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsicmlkZTpyZWFkIl0sImFtciI6WyJvdHAiXSwiaXNzIjoiY2FiLWF1dGgtc2VydmljZSIsImF1ZCI6WyJjYWItYXBpIl0sImlhdCI6MTc3NTc5NTMzNSwianRpIjoiYzFkZDNmNGMtNTRhZi00OGIzLThhMjgtMTRlY2I1MWE4MGQwIiwiZXhwIjoxNzc1Nzk2MjM1fQ.pwQxx5Drm1At7tDyqW_km1pihGx0CnmDUBzurnb2tWikrVSOSYlQVQ56E5alES8T2RnsNRNFEKjYXFGRo_xBbiXP2uI9Bk3oNtj3hJqHkR8si6nZWKJyO6uJItDnE5OKM42PNy0ScjEvJLqB-exc20pFsN7ULeMj9VMworcwnDqGUbh19Esg3DQZmuHDm-JUdnEhir5f8tTO9y1qYZjAJLpkAzxA8XuQXrluJemOegSd4EJupnF-LxwNV8vbfRnhsJEWOllYovYcK8Q4d9awhcmZ9Wo3dMpA9BvSidPkycaBceLnU_Lh_Ouo6IidDvgpt7cANMUIRIxC5Z59au8-ww",
+      "accessTokenExpiresInSeconds": 900,
+      "refreshToken": "71-7FLDwG6-HJCZtFPQadFaHc8lGy0Z11jLUApii12J99E8knQ0OHP9k7w6ZjMUK",
+      "refreshTokenExpiresInSeconds": 1209600,
+      "sessionId": "5787a418-2d2f-4e3e-aaea-a579aab744bc"
+    },
+    "accessToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImF1dGgta2V5LWxvY2FsLTEiLCJ0eXAiOiJKV1QifQ.eyJ0eXAiOiJhY2Nlc3MiLCJzdWIiOiIzNDk0MjNhZS0wNzVhLTQ4YWMtYjAzYy02YTY4YTMwMTcxZWUiLCJzaWQiOiI1Nzg3YTQxOC0yZDJmLTRlM2UtYWFlYS1hNTc5YWFiNzQ0YmMiLCJhaWQiOiI2ODM5MmQ4Ni1kOTA0LTQ1NGEtYTQ1Mi01YzMyODYyYTc5MDQiLCJyb2xlIjoiZHJpdmVyIiwicm9sZXMiOlsiZHJpdmVyIl0sInNjb3BlIjoiIiwicGVybWlzc2lvbnMiOlsicmlkZTpyZWFkIl0sImFtciI6WyJvdHAiXSwiaXNzIjoiY2FiLWF1dGgtc2VydmljZSIsImF1ZCI6WyJjYWItYXBpIl0sImlhdCI6MTc3NTc5NTMzNSwianRpIjoiYzFkZDNmNGMtNTRhZi00OGIzLThhMjgtMTRlY2I1MWE4MGQwIiwiZXhwIjoxNzc1Nzk2MjM1fQ.pwQxx5Drm1At7tDyqW_km1pihGx0CnmDUBzurnb2tWikrVSOSYlQVQ56E5alES8T2RnsNRNFEKjYXFGRo_xBbiXP2uI9Bk3oNtj3hJqHkR8si6nZWKJyO6uJItDnE5OKM42PNy0ScjEvJLqB-exc20pFsN7ULeMj9VMworcwnDqGUbh19Esg3DQZmuHDm-JUdnEhir5f8tTO9y1qYZjAJLpkAzxA8XuQXrluJemOegSd4EJupnF-LxwNV8vbfRnhsJEWOllYovYcK8Q4d9awhcmZ9Wo3dMpA9BvSidPkycaBceLnU_Lh_Ouo6IidDvgpt7cANMUIRIxC5Z59au8-ww",
+    "refreshToken": "71-7FLDwG6-HJCZtFPQadFaHc8lGy0Z11jLUApii12J99E8knQ0OHP9k7w6ZjMUK",
+    "tokenType": "Bearer"
+  },
+  "meta": {
+    "requestId": "a3163fce-3096-414f-b078-1bebb35a47ed",
+    "correlationId": "dc3dd861-abc7-44a6-9d53-4757e2d826f9",
+    "timestamp": "2026-04-10T04:28:55.805Z"
+  }
+}</pre>
+</body></html>

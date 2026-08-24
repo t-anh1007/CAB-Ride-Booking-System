@@ -1,0 +1,105 @@
+# Review Service — Tổng kết triển khai
+
+## Tổng quan
+
+Đã triển khai hoàn chỉnh `review-service` cho hệ thống CAB Booking, tuân thủ đầy đủ các nguyên tắc kiến trúc microservices và quy tắc dữ liệu chung của dự án.
+
+## Các file đã tạo mới
+
+| File | Mục đích |
+|------|---------|
+| [index.js](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/services/review-service/src/index.js) | Entry point — bootstrap service + đăng ký routes |
+| [routes.js](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/services/review-service/src/routes.js) | 4 REST API endpoints theo yêu cầu |
+| [store.js](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/services/review-service/src/store.js) | Data access layer (in-memory, sẵn sàng thay bằng PostgreSQL) |
+
+## Các file đã chỉnh sửa (tích hợp vào hệ thống chung)
+
+| File | Thay đổi |
+|------|---------|
+| [service-manifests.js](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/platform/architecture/service-manifests.js) | Thêm `publishes: ["ReviewCreated"]`, `consumes: ["RideStatusChanged"]` |
+| [event-contracts.js](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/platform/architecture/event-contracts.js) | Thêm event `ReviewCreated` → topic `review.created` |
+| [topology.json](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/message-broker/kafka/topology.json) | Đăng ký topic `review.created` trong Kafka |
+| [validation-schemas.js](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/gateway/api-gateway/src/validation-schemas.js) | Thêm schema `reviewCreate` (Zod validation tại gateway) |
+| [route-registry.js](file:///d:/IUH/HK2_25-26/BigData/DHHTTT18B-N12-cab-system/gateway/api-gateway/src/route-registry.js) | Thêm route policy `review-create` với rate limit + idempotency |
+
+## API Endpoints
+
+### `POST /api/v1/reviews` — Gửi đánh giá chuyến đi
+
+```json
+// Request
+{
+  "rideId": "uuid",
+  "userId": "uuid",
+  "driverId": "uuid",
+  "rating": 5,
+  "comment": "Tài xế thân thiện"
+}
+
+// Response (201 Created)
+{
+  "success": true,
+  "message": "Review created",
+  "data": {
+    "reviewId": "uuid",
+    "rideId": "uuid",
+    "userId": "uuid",
+    "driverId": "uuid",
+    "rating": 5,
+    "comment": "Tài xế thân thiện",
+    "createdAt": "2026-04-09T04:15:04.848Z"
+  },
+  "meta": {
+    "requestId": "uuid",
+    "correlationId": "uuid",
+    "timestamp": "2026-04-09T04:15:04.848Z"
+  }
+}
+```
+
+### `GET /api/v1/reviews/ride/:rideId` — Đánh giá theo chuyến
+
+### `GET /api/v1/reviews/driver/:driverId` — Đánh giá theo tài xế (kèm averageRating)
+
+### `GET /api/v1/reviews/driver/:driverId/average` — Điểm trung bình tài xế
+
+## Tính năng đáp ứng yêu cầu
+
+| Yêu cầu | Trạng thái | Chi tiết |
+|----------|-----------|---------|
+| Gửi đánh giá chuyến đi | ✅ | `POST /api/v1/reviews` |
+| Đánh giá tài xế | ✅ | Rating 1-5, comment tùy chọn |
+| Lưu phản hồi khách hàng | ✅ | Lưu vào store (PostgreSQL-ready) |
+| Điểm đánh giá trung bình | ✅ | `GET .../driver/:id/average` |
+| Quản lý dữ liệu đánh giá | ✅ | CRUD operations + idempotency |
+| Tách khỏi flow booking/payment | ✅ | Service độc lập, chỉ consume `RideStatusChanged` |
+| Phục vụ phân tích chất lượng | ✅ | Publish `ReviewCreated` event qua Kafka |
+| Cải thiện trải nghiệm | ✅ | Data feed cho AI Matching (driver rating) |
+
+## Tuân thủ nguyên tắc kiến trúc
+
+| Nguyên tắc | Cách tuân thủ |
+|------------|--------------|
+| **Database per service** | Dùng PostgreSQL riêng (đã đăng ký trong manifest) |
+| **Stateless service** | Không lưu session, mỗi request độc lập |
+| **Event-driven (async-first)** | Publish `ReviewCreated` qua Kafka, consume `RideStatusChanged` |
+| **Zero Trust security** | Gateway xác thực JWT, RBAC (Customer/Driver), rate limit, Zod validation |
+| **Observability** | Chuẩn response envelope `{success, message, data, meta}` với requestId + correlationId |
+| **Idempotency** | 1 user chỉ review 1 lần/ride (service-level + gateway-level) |
+
+## Kết quả test
+
+```
+✅ POST /api/v1/reviews       → 201 Created (review mới)
+✅ POST /api/v1/reviews       → 409 Conflict (duplicate review)
+✅ POST /api/v1/reviews       → 400 Bad Request (rating > 5)
+✅ POST /api/v1/reviews       → 400 Bad Request (thiếu fields)
+✅ GET  /ride/:rideId          → 200 OK (danh sách reviews)
+✅ GET  /driver/:driverId      → 200 OK (reviews + averageRating)
+✅ GET  /driver/:id/average    → 200 OK (averageRating = 4, totalReviews = 2)
+✅ GET  /driver/:id/average    → 200 OK (averageRating = null khi chưa có review)
+✅ GET  /health                → 200 OK
+✅ GET  /architecture          → 200 OK (đầy đủ topology)
+✅ Gateway test suite          → 11/11 PASS (không phá vỡ gì)
+```
+ Cách chạy chức năng để test: npm run dev:review

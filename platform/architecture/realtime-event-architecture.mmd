@@ -1,0 +1,32 @@
+flowchart LR
+  subgraph microservices["Microservices"]
+    notification["Notification Service"]
+    driver["Driver Service"]
+    ride["Ride Service"]
+  end
+
+  subgraph realtime["Real-time Layer"]
+    socket["WebSocket / Socket.IO"]
+  end
+
+  subgraph broker["Event Broker"]
+    kafka["Kafka"]
+  end
+
+  subgraph geo["In-memory & Geo"]
+    redis["Redis Geo"]
+  end
+
+  subgraph clients["Client Apps"]
+    customer["Customer App"]
+    driverApp["Driver App"]
+  end
+
+  notification -->|RideUpdateEvent| socket
+  driver -->|DriverAssigned| kafka
+  driver -->|DriverLocationUpdated| kafka
+  ride -->|RideStatusChanged| kafka
+  ride -->|UpdateGeo| redis
+  driverApp -->|GPSLocationStream| ride
+  socket --> customer
+  socket --> driverApp

@@ -1,0 +1,23 @@
+{
+  "name": "@cab/booking-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^4.22.1",
+    "ioredis": "^5.10.1",
+    "kafkajs": "^2.2.4",
+    "mongoose": "^9.4.1",
+    "node-fetch": "^3.3.2",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

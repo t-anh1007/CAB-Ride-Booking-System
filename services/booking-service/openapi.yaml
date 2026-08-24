@@ -1,0 +1,48 @@
+openapi: 3.0.0
+info:
+  title: Booking Service API
+  version: 1.0.0
+  description: API quản lý đặt xe.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+paths:
+  /:
+    post:
+      summary: Tạo mới yêu cầu đặt xe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pickup:
+                  type: object
+                destination:
+                  type: object
+    get:
+      summary: Lấy danh sách chuyến xe của User
+  
+  /{bookingId}:
+    get:
+      summary: Chi tiết chuyến xe
+    patch:
+      summary: Cập nhật trạng thái/tài xế
+  
+  /{bookingId}/cancel:
+    post:
+      summary: Hủy chuyến xe
+      responses:
+        '200':
+          description: Hủy thành công
+        '404':
+          description: Không tìm thấy booking

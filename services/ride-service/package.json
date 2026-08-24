@@ -1,0 +1,23 @@
+{
+  "name": "@cab/ride-service",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "kafkajs": "^2.2.4",
+    "ioredis": "^5.10.1",
+    "mongoose": "^8.6.3",
+    "ws": "^8.13.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

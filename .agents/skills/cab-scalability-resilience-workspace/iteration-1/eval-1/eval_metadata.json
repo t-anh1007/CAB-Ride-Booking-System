@@ -1,0 +1,17 @@
+{
+  "eval_id": 1,
+  "eval_name": "payment-retry-safety",
+  "prompt": "Hãy kiểm tra cơ chế thanh toán retry/backoff. Tôi muốn xem nếu provider thanh toán thất bại ở các lần thử (exhausted state), thì hệ thống xử lý thế nào, liệu có bị double charge không.",
+  "assertions": [
+    {
+      "name": "avoids_unverifiable_pass",
+      "type": "contains",
+      "value": "MISSING_EVIDENCE"
+    },
+    {
+      "name": "uses_correct_result_status",
+      "type": "regex",
+      "value": "\\*\\*Result Status:\\*\\* `(PASS|FAIL|MISSING_EVIDENCE|ARCHITECTURE_DRIFT)`"
+    }
+  ]
+}

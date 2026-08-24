@@ -1,0 +1,337 @@
+{
+  "info": {
+    "_postman_id": "c0c4dd0b-d662-45ba-ae2b-ff972e978f16",
+    "name": "level 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48411309",
+    "_collection_link": "https://go.postman.co/collection/48411309-c0c4dd0b-d662-45ba-ae2b-ff972e978f16?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. dki",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"OTP request accepted\", () => {\r",
+              "  pm.response.to.have.status(202);\r",
+              "  const json = pm.response.json();\r",
+              "  pm.expect(json.success).to.eql(true);\r",
+              "  pm.expect(json.data.debugOtpCode).to.exist;\r",
+              "  pm.environment.set(\"customerOtp\", json.data.debugOtpCode);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"destination\": \"0909123456\",\r\n  \"role\": \"customer\",\r\n  \"channel\": \"sms\"\r\n}\r\n\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/login/otp/request",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login",
+            "otp",
+            "request"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Customer login returns JWT\", () => {\r",
+              "  pm.response.to.have.status(200);\r",
+              "  const json = pm.response.json();\r",
+              "  const token = json.data.accessToken || json.data.tokens?.accessToken;\r",
+              "  const refresh = json.data.refreshToken || json.data.tokens?.refreshToken;\r",
+              "  pm.expect(token).to.exist;\r",
+              "  pm.expect(refresh).to.exist;\r",
+              "\r",
+              "\r",
+              "  const payload = JSON.parse(Buffer.from(token.split(\".\")[1], \"base64\").toString());\r",
+              "  pm.expect(payload.sub).to.exist;\r",
+              "  pm.expect(payload.exp).to.exist;\r",
+              "\r",
+              "\r",
+              "  pm.environment.set(\"customerAccessToken\", token);\r",
+              "  pm.environment.set(\"customerRefreshToken\", refresh);\r",
+              "  pm.environment.set(\"customerUserId\", json.data.account.subject_id);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"destination\": \"0909123456\",\r\n  \"role\": \"customer\",\r\n  \"code\": \"{{customerOtp}}\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/login/otp/verify",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login",
+            "otp",
+            "verify"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Quote uses ETA and surge pricing\", () => {\r",
+              "  pm.response.to.have.status(200);\r",
+              "  const json = pm.response.json();\r",
+              "  const data = json.data;\r",
+              "\r",
+              "\r",
+              "  pm.expect(data.quoteId).to.exist;\r",
+              "  pm.expect(data.priceSnapshot.amount).to.be.above(0);\r",
+              "  pm.expect(data.priceSnapshot.surgeMultiplier).to.be.at.least(1);\r",
+              "\r",
+              "\r",
+              "  pm.environment.set(\"quoteId\", data.quoteId);\r",
+              "  pm.environment.set(\"lockedAmount\", data.priceSnapshot.amount);\r",
+              "  pm.environment.set(\"distanceKm\", data.priceSnapshot.distance || data.distanceKm || 5);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{customerAccessToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"pickupAddress\": \"IUH\",\r\n  \"destinationAddress\": \"Ben Thanh\",\r\n  \"vehicleType\": \"bike\",\r\n  \"pickupLat\": 10.76,\r\n  \"pickupLng\": 106.66,\r\n  \"dropLat\": 10.77,\r\n  \"dropLng\": 106.70\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/pricing/quote",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "pricing",
+            "quote"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Driver OTP request accepted\", () => {\r",
+              "  pm.response.to.have.status(202);\r",
+              "  const json = pm.response.json();\r",
+              "  pm.environment.set(\"driverOtp\", json.data.debugOtpCode);\r",
+              "});\r",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": " {\r\n  \"destination\": \"{{driverDestination}}\",\r\n  \"role\": \"driver\",\r\n  \"channel\": \"sms\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/auth/login/otp/request",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login",
+            "otp",
+            "request"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "customerDestination",
+      "value": ""
+    },
+    {
+      "key": "driverDestination",
+      "value": ""
+    },
+    {
+      "key": "driverId",
+      "value": ""
+    },
+    {
+      "key": "pickupLat",
+      "value": ""
+    },
+    {
+      "key": "pickupLng",
+      "value": ""
+    },
+    {
+      "key": "dropLat",
+      "value": ""
+    },
+    {
+      "key": "dropLng",
+      "value": ""
+    }
+  ]
+}

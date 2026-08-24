@@ -1,0 +1,19 @@
+flowchart LR
+  client["Client Apps"]
+  edge["Edge Security\nHTTPS/TLS 1.3 + WAF + Rate Limit"]
+  gateway["API Gateway\nPEP + JWT/OAuth2 + Validation"]
+  mesh["Service-to-Service Security\nmTLS + Service Identity + Service Mesh"]
+  services["Microservices"]
+  auth["Central Auth Service"]
+  secrets["Secrets / Key Management\nVault / Secret Manager"]
+  data["Data Layer\nEncryption + Masking + DB per Service"]
+  audit["Audit / Logging / SIEM"]
+
+  client --> edge --> gateway --> services --> data
+  gateway --> auth
+  services --> auth
+  gateway --> secrets
+  services --> secrets
+  gateway --> audit
+  services --> audit
+  mesh --- services

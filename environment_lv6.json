@@ -1,0 +1,249 @@
+{
+  "id": "b4306f7e-33df-4c81-9608-15ff903153cf",
+  "name": "CAB-System-Local-Level6",
+  "values": [
+    {
+      "key": "matching_base_url",
+      "value": "http://localhost:8000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "eta_base_url",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "pricing_base_url",
+      "value": "http://localhost:3101",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "gateway_base_url",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "ride_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "request_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "vehicle_type",
+      "value": "standard",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "pickup_lat",
+      "value": "10.762622",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "pickup_lng",
+      "value": "106.660172",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "drop_lat",
+      "value": "10.773170",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "drop_lng",
+      "value": "106.704820",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "max_retry_attempts",
+      "value": "2",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tc56_simulate_first_error",
+      "value": "false",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tc56_retry_count",
+      "value": "0",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tc56_eta_path",
+      "value": "/api/v1/eta/calculate",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tc59_parallel_requests",
+      "value": "5",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "selected_driver_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tc58_decision_source",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "tc58_matching_reason",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_base_url",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "user_service_base_url",
+      "value": "http://localhost:3105",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "booking_base_url",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "driver_base_url",
+      "value": "http://localhost:3107",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "notification_base_url",
+      "value": "http://localhost:3108",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_destination",
+      "value": "0909123456",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_otp_code",
+      "value": "123456",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_destination_driver",
+      "value": "0909000001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "auth_otp_code_driver",
+      "value": "123456",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "level1_login_actor",
+      "value": "customer",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "level1_login_role",
+      "value": "customer",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "driver_id",
+      "value": "DRV001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "level1_user_id",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "level1_booking_user_id",
+      "value": "f4f1bf52-6c73-42a1-8098-8bb47d9db828",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "access_token_driver",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "token_driver",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "refresh_token_driver",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "seed_customer_subject_id",
+      "value": "f4f1bf52-6c73-42a1-8098-8bb47d9db828",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-04-25T00:00:00.000Z",
+  "_postman_exported_using": "Codex GPT-5"
+}

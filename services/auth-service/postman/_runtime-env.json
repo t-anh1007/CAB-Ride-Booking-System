@@ -1,0 +1,64 @@
+{
+  "_": {
+    "postman_variable_scope": "environment",
+    "postman_exported_at": "2026-04-09T00:00:00.000Z",
+    "postman_exported_using": "Cursor Agent"
+  },
+  "id": "c4f7f7bd-0b53-4c39-9b8a-d996f7bd45af",
+  "name": "auth-service-local",
+  "values": [
+    {
+      "type": "any",
+      "value": "http://localhost:3000",
+      "key": "gatewayBaseUrl"
+    },
+    {
+      "type": "any",
+      "value": "+84900000001",
+      "key": "customerDestination"
+    },
+    {
+      "type": "any",
+      "value": "+84900000002",
+      "key": "driverDestination"
+    },
+    {
+      "type": "any",
+      "value": "admin@cab.local",
+      "key": "adminDestination"
+    },
+    {
+      "type": "any",
+      "value": "ChangeMe123!",
+      "key": "adminPassword"
+    },
+    {
+      "type": "any",
+      "value": "",
+      "key": "adminTotpCode"
+    },
+    {
+      "type": "any",
+      "value": "ride-active-assigned-driver-1",
+      "key": "rideActiveAssignedId"
+    },
+    {
+      "type": "any",
+      "value": "ride-completed-assigned-driver-1",
+      "key": "rideCompletedAssignedId"
+    },
+    {
+      "type": "any",
+      "value": "10.7769",
+      "key": "driverLatitude"
+    },
+    {
+      "type": "any",
+      "value": "106.7009",
+      "key": "driverLongitude"
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2026-04-10T01:40:40.515Z",
+  "_postman_exported_using": "Newman/6.2.2"
+}

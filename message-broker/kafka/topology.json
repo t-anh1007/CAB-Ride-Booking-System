@@ -1,0 +1,31 @@
+{
+  "provider": "Kafka",
+  "brokersEnv": "KAFKA_BROKERS",
+  "events": [
+    {
+      "name": "PaymentSuccess",
+      "topic": "payment.success",
+      "producer": "payment-service"
+    },
+    {
+      "name": "RideCreated",
+      "topic": "ride.created",
+      "producer": "booking-service"
+    },
+    {
+      "name": "DriverAssigned",
+      "topic": "driver.assigned",
+      "producer": "driver-service"
+    },
+    {
+      "name": "DriverLocationUpdated",
+      "topic": "driver.location.updated",
+      "producer": "driver-service"
+    },
+    {
+      "name": "RideStatusChanged",
+      "topic": "ride.status.changed",
+      "producer": "ride-service"
+    }
+  ]
+}

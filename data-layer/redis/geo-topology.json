@@ -1,0 +1,6 @@
+{
+  "provider": "Redis Geo",
+  "updateOperation": "UpdateGeo",
+  "sourceStream": "GPSLocationStream",
+  "primaryWriter": "ride-service"
+}

@@ -1,0 +1,59 @@
+name: Deploy Docker Swarm
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Image tag to deploy
+        required: true
+        default: latest
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy swarm files to manager node
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SWARM_MANAGER_HOST }}
+          username: ${{ secrets.SWARM_MANAGER_USER }}
+          key: ${{ secrets.SWARM_MANAGER_SSH_KEY }}
+          source: "infra/docker-swarm/*"
+          target: "~/cab-booking"
+          strip_components: 1
+
+      - name: Deploy stack on swarm manager
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SWARM_MANAGER_HOST }}
+          username: ${{ secrets.SWARM_MANAGER_USER }}
+          key: ${{ secrets.SWARM_MANAGER_SSH_KEY }}
+          script: |
+            cd ~/cab-booking
+            export STACK_NAME="${{ vars.STACK_NAME }}"
+            export REGISTRY="${{ vars.CONTAINER_REGISTRY }}"
+            export IMAGE_TAG="${{ github.event.inputs.image_tag }}"
+            export ADMIN_DASHBOARD_PORT="${{ vars.ADMIN_DASHBOARD_PORT }}"
+            export CUSTOMER_APP_PORT="${{ vars.CUSTOMER_APP_PORT }}"
+            export DRIVER_APP_PORT="${{ vars.DRIVER_APP_PORT }}"
+            export API_GATEWAY_PORT="${{ vars.API_GATEWAY_PORT }}"
+            export ADMIN_DASHBOARD_REPLICAS="${{ vars.ADMIN_DASHBOARD_REPLICAS }}"
+            export CUSTOMER_APP_REPLICAS="${{ vars.CUSTOMER_APP_REPLICAS }}"
+            export DRIVER_APP_REPLICAS="${{ vars.DRIVER_APP_REPLICAS }}"
+            export API_GATEWAY_REPLICAS="${{ vars.API_GATEWAY_REPLICAS }}"
+            export APP_SERVICE_REPLICAS="${{ vars.APP_SERVICE_REPLICAS }}"
+            export API_PUBLIC_URL="${{ vars.API_PUBLIC_URL }}"
+            export WS_PUBLIC_URL="${{ vars.WS_PUBLIC_URL }}"
+            export KAFKA_BROKERS="${{ vars.KAFKA_BROKERS }}"
+            export POSTGRES_DB="${{ secrets.POSTGRES_DB }}"
+            export POSTGRES_USER="${{ secrets.POSTGRES_USER }}"
+            export POSTGRES_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+            export MONGO_DB="${{ secrets.MONGO_DB }}"
+            export MONGO_INITDB_ROOT_USERNAME="${{ secrets.MONGO_INITDB_ROOT_USERNAME }}"
+            export MONGO_INITDB_ROOT_PASSWORD="${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}"
+            export REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}"
+            docker stack deploy --with-registry-auth -c docker-stack.yml "$STACK_NAME"
+            docker stack services "$STACK_NAME"

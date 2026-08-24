@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>[OTP Customer] Verify OTP</title>
+<style>
+  body{font-family:Segoe UI,system-ui,sans-serif;margin:0;padding:20px;background:#121212;color:#e0e0e0;}
+  h1{font-size:1.1rem;color:#4fc3f7;margin:0 0 8px;}
+  .status{font-size:0.95rem;color:#81c784;margin-bottom:12px;}
+  pre{white-space:pre-wrap;word-break:break-all;background:#1e1e1e;padding:14px;border-radius:8px;border:1px solid #333;font-size:12px;line-height:1.4;}
+  code{color:#ffcc80;}
+</style></head>
+<body>
+  <h1>[OTP Customer] Verify OTP</h1>
+  <div class="status">HTTP 200</div>
+  
+  <pre>{
+  "success": true,
+  "message": "OK",
+  "data": {
+    "authStatus": "verified",
+    "message": "OTP verified successfully.",
+    "account": {
+      "id": "98f9d1ea-0c8d-4150-9f16-8b8f7f0c65da",
+      "subject_id": "32574df1-7e5b-4b64-9d46-89aa0484673d",
+      "destination": "+84900000001",
+      "destination_type": "phone",
+      "status": "active",
+      "last_login_at": null,
+      "created_at": "2026-04-10T04:27:35.570Z",
+      "updated_at": "2026-04-10T04:27:35.570Z",
+      "roles": [
+        "customer"
+      ]
+    },
+    "bootstrap": {
+      "status": "failed",
+      "service": "user-service",
+      "errorCode": "BOOTSTRAP_TIMEOUT"
+    },
+    "tokens": {
+      "tokenType": "Bearer",
+      "accessToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImF1dGgta2V5LWxvY2FsLTEiLCJ0eXAiOiJKV1QifQ.eyJ0eXAiOiJhY2Nlc3MiLCJzdWIiOiIzMjU3NGRmMS03ZTViLTRiNjQtOWQ0Ni04OWFhMDQ4NDY3M2QiLCJzaWQiOiIzNjgxYWEzMC1iOTNmLTQzMDMtOWFhOC1jYTQ5NjllNDkzYjgiLCJhaWQiOiI5OGY5ZDFlYS0wYzhkLTQxNTAtOWYxNi04YjhmN2YwYzY1ZGEiLCJyb2xlIjoiY3VzdG9tZXIiLCJyb2xlcyI6WyJjdXN0b21lciJdLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbInJpZGU6cmVhZCJdLCJhbXIiOlsib3RwIl0sImlzcyI6ImNhYi1hdXRoLXNlcnZpY2UiLCJhdWQiOlsiY2FiLWFwaSJdLCJpYXQiOjE3NzU3OTUzMzUsImp0aSI6IjQzMzBmNTVkLTExYTctNDkwZC1hYWU5LWY2YjE1MzVhMjVmZiIsImV4cCI6MTc3NTc5NjIzNX0.GaXQhY4dh1CypDTZFiCXPaa-5l4MeD9TOyZJ5i1skKcP_RDnDadk47wDH4P47ZRkCLHloT8jflEVnQFqpzgCXk42Lsxrvvfk3qykiR5xSaIm3-u1hj58OuSl2Vms59TqXG56okDMqcSM6w7h469kcHz044tauuZxxirbZCFWyDiFCSiV93VD1cJ1oQUM01jUuWObBVYPKlGrWedcfqVT20RB3ITk1l42t-2cje-QUP4GAtnppx5kkFAK-MAOj9sK9XbZXne65ZJqa9mzYzKy3wd-qvBwxgUypSrxCTyFt_QLSsap8iLQ8eN9swQd0-8RUETvw76qssYRwI8NcfFArA",
+      "accessTokenExpiresInSeconds": 900,
+      "refreshToken": "Evp2nvuLeRe3q2HAVFQgILEGWRec89fkWNOQgpMo1WicApG1nHyHYZlYg6JyEYSM",
+      "refreshTokenExpiresInSeconds": 1209600,
+      "sessionId": "3681aa30-b93f-4303-9aa8-ca4969e493b8"
+    },
+    "accessToken": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImF1dGgta2V5LWxvY2FsLTEiLCJ0eXAiOiJKV1QifQ.eyJ0eXAiOiJhY2Nlc3MiLCJzdWIiOiIzMjU3NGRmMS03ZTViLTRiNjQtOWQ0Ni04OWFhMDQ4NDY3M2QiLCJzaWQiOiIzNjgxYWEzMC1iOTNmLTQzMDMtOWFhOC1jYTQ5NjllNDkzYjgiLCJhaWQiOiI5OGY5ZDFlYS0wYzhkLTQxNTAtOWYxNi04YjhmN2YwYzY1ZGEiLCJyb2xlIjoiY3VzdG9tZXIiLCJyb2xlcyI6WyJjdXN0b21lciJdLCJzY29wZSI6IiIsInBlcm1pc3Npb25zIjpbInJpZGU6cmVhZCJdLCJhbXIiOlsib3RwIl0sImlzcyI6ImNhYi1hdXRoLXNlcnZpY2UiLCJhdWQiOlsiY2FiLWFwaSJdLCJpYXQiOjE3NzU3OTUzMzUsImp0aSI6IjQzMzBmNTVkLTExYTctNDkwZC1hYWU5LWY2YjE1MzVhMjVmZiIsImV4cCI6MTc3NTc5NjIzNX0.GaXQhY4dh1CypDTZFiCXPaa-5l4MeD9TOyZJ5i1skKcP_RDnDadk47wDH4P47ZRkCLHloT8jflEVnQFqpzgCXk42Lsxrvvfk3qykiR5xSaIm3-u1hj58OuSl2Vms59TqXG56okDMqcSM6w7h469kcHz044tauuZxxirbZCFWyDiFCSiV93VD1cJ1oQUM01jUuWObBVYPKlGrWedcfqVT20RB3ITk1l42t-2cje-QUP4GAtnppx5kkFAK-MAOj9sK9XbZXne65ZJqa9mzYzKy3wd-qvBwxgUypSrxCTyFt_QLSsap8iLQ8eN9swQd0-8RUETvw76qssYRwI8NcfFArA",
+    "refreshToken": "Evp2nvuLeRe3q2HAVFQgILEGWRec89fkWNOQgpMo1WicApG1nHyHYZlYg6JyEYSM",
+    "tokenType": "Bearer"
+  },
+  "meta": {
+    "requestId": "bb84f1e1-6ae9-4f86-b6d6-476ebeb3bf78",
+    "correlationId": "8981657f-e014-4c7a-9d82-0ff8235af1a5",
+    "timestamp": "2026-04-10T04:28:55.233Z"
+  }
+}</pre>
+</body></html>

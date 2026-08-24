@@ -1,0 +1,83 @@
+CREATE TABLE IF NOT EXISTS users (
+  user_id UUID PRIMARY KEY,
+  role VARCHAR(30) NOT NULL DEFAULT 'CUSTOMER',
+  account_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+  full_name VARCHAR(120) NOT NULL,
+  display_name VARCHAR(120) NOT NULL DEFAULT '',
+  phone VARCHAR(20) NOT NULL UNIQUE,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  avatar_url TEXT NOT NULL DEFAULT '',
+  bio TEXT NOT NULL DEFAULT '',
+  default_payment_method VARCHAR(30) NOT NULL DEFAULT 'cash',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(30) NOT NULL DEFAULT 'CUSTOMER';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(120) NOT NULL DEFAULT '';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT NOT NULL DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS driver_profiles (
+  user_id UUID PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
+  kyc_status VARCHAR(30) NOT NULL DEFAULT 'NOT_SUBMITTED',
+  approval_status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+  approval_notes TEXT NOT NULL DEFAULT '',
+  vehicle_type VARCHAR(60) NOT NULL DEFAULT '',
+  license_number VARCHAR(60) NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_preferences (
+  user_id UUID PRIMARY KEY REFERENCES users(user_id) ON DELETE CASCADE,
+  language VARCHAR(10) NOT NULL DEFAULT 'vi',
+  push_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+  email_notifications BOOLEAN NOT NULL DEFAULT TRUE,
+  marketing_opt_in BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS saved_locations (
+  location_id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  label VARCHAR(20) NOT NULL DEFAULT 'OTHER',
+  title VARCHAR(120) NOT NULL,
+  address_line TEXT NOT NULL,
+  latitude DOUBLE PRECISION NOT NULL,
+  longitude DOUBLE PRECISION NOT NULL,
+  note TEXT NOT NULL DEFAULT '',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_saved_locations_user_id ON saved_locations(user_id);
+CREATE INDEX IF NOT EXISTS idx_users_role_account_status ON users(role, account_status);
+CREATE INDEX IF NOT EXISTS idx_driver_profiles_approval_kyc ON driver_profiles(approval_status, kyc_status);
+
+CREATE TABLE IF NOT EXISTS payment_methods (
+  payment_method_id UUID PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  type VARCHAR(30) NOT NULL,
+  provider VARCHAR(60),
+  masked_value VARCHAR(120) NOT NULL DEFAULT '',
+  is_default BOOLEAN NOT NULL DEFAULT FALSE,
+  status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_payment_methods_default_per_user
+  ON payment_methods(user_id)
+  WHERE is_default = TRUE;
+
+CREATE TABLE IF NOT EXISTS wallet_accounts (
+  wallet_account_id UUID PRIMARY KEY,
+  user_id UUID NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+  balance BIGINT NOT NULL DEFAULT 0,
+  currency VARCHAR(10) NOT NULL DEFAULT 'VND',
+  status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

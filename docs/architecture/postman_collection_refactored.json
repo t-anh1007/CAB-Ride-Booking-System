@@ -1,0 +1,383 @@
+{
+	"info": {
+		"name": "CAB-BOOKING - FULL AUTO FLOW (Final Verified)",
+		"description": "Luồng End-to-End đầy đủ: Fix lỗi validation priceSnapshot.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "driverToken",
+			"value": ""
+		},
+		{
+			"key": "otpCode",
+			"value": ""
+		},
+		{
+			"key": "driverOtpCode",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "driverId",
+			"value": ""
+		},
+		{
+			"key": "bookingId",
+			"value": ""
+		},
+		{
+			"key": "rideId",
+			"value": ""
+		},
+		{
+			"key": "quoteId",
+			"value": ""
+		},
+		{
+			"key": "latest_price",
+			"value": "0"
+		},
+		{
+			"key": "pickup_lat",
+			"value": "10.823"
+		},
+		{
+			"key": "pickup_lng",
+			"value": "106.629"
+		},
+		{
+			"key": "drop_lat",
+			"value": "10.762"
+		},
+		{
+			"key": "drop_lng",
+			"value": "106.660"
+		}
+	],
+	"item": [
+		{
+			"name": "1a. Customer Auth - Request OTP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); pm.collectionVariables.set('otpCode', res.data.debugOtpCode);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"destination\": \"0909123456\", \"role\": \"customer\", \"channel\": \"sms\"}"
+				},
+				"url": "{{baseUrl}}/api/v1/auth/login/otp/request"
+			}
+		},
+		{
+			"name": "1b. Customer Auth - Verify OTP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); pm.collectionVariables.set('token', res.data.tokens.accessToken); pm.collectionVariables.set('userId', res.data.account.subject_id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"destination\": \"0909123456\", \"role\": \"customer\", \"code\": \"{{otpCode}}\"}"
+				},
+				"url": "{{baseUrl}}/api/v1/auth/login/otp/verify"
+			}
+		},
+		{
+			"name": "2a. Driver Auth - Request OTP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); pm.collectionVariables.set('driverOtpCode', res.data.debugOtpCode);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"destination\": \"0908888777\", \"role\": \"driver\", \"channel\": \"sms\"}"
+				},
+				"url": "{{baseUrl}}/api/v1/auth/login/otp/request"
+			}
+		},
+		{
+			"name": "2b. Driver Auth - Verify OTP",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); pm.collectionVariables.set('driverToken', res.data.tokens.accessToken); pm.collectionVariables.set('driverId', res.data.account.subject_id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"destination\": \"0908888777\", \"role\": \"driver\", \"code\": \"{{driverOtpCode}}\"}"
+				},
+				"url": "{{baseUrl}}/api/v1/auth/login/otp/verify"
+			}
+		},
+		{
+			"name": "3. Driver Online (Khai báo vị trí)",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{driverToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"status\": \"ONLINE\", \"availability\": \"AVAILABLE\", \"location\": {\"lat\": {{pickup_lat}}, \"lng\": {{pickup_lng}}, \"address\": \"12 Nguyen Van Bao, Go Vap\"}}"
+				},
+				"url": "{{baseUrl}}/api/v1/drivers/{{driverId}}"
+			}
+		},
+		{
+			"name": "4. Pricing - Auto Quote (Tính tiền)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); pm.collectionVariables.set('latest_price', res.data.priceSnapshot.amount); pm.collectionVariables.set('quoteId', res.data.quoteId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"pickupLat\": {{pickup_lat}}, \"pickupLng\": {{pickup_lng}}, \"dropLat\": {{drop_lat}}, \"dropLng\": {{drop_lng}}, \"pickupAddress\": \"12 Nguyen Van Bao, Go Vap\", \"destinationAddress\": \"Cho Ben Thanh, Quan 1\", \"vehicleType\": \"bike\"}"
+				},
+				"url": "{{baseUrl}}/api/v1/pricing/quote"
+			}
+		},
+		{
+			"name": "5. Booking - Create REQUESTED",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); pm.collectionVariables.set('bookingId', res.data.bookingId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					},
+					{
+						"key": "Idempotency-Key",
+						"value": "{{$guid}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"userId\": \"{{userId}}\", \"quoteId\": \"{{quoteId}}\", \"pickup\": {\"lat\": 10.823, \"lng\": 106.629, \"address\": \"12 Nguyen Van Bao\"}, \"drop\": {\"lat\": 10.762, \"lng\": 106.660, \"address\": \"Cho Ben Thanh\"}, \"vehicleType\": \"bike\", \"paymentMethod\": \"CASH\", \"priceSnapshot\": {\"amount\": {{latest_price}}, \"currency\": \"VND\"}}"
+				},
+				"url": "{{baseUrl}}/api/v1/bookings"
+			}
+		},
+		{
+			"name": "6. Polling Matching - Waiting for AI",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); if (res.data.status === 'REQUESTED') { setTimeout(function() { postman.setNextRequest(pm.info.requestName); }, 2000); } else if (res.data.status === 'ASSIGNED') { pm.collectionVariables.set('driverId', res.data.driverId); }"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"url": "{{baseUrl}}/api/v1/bookings/{{bookingId}}"
+			}
+		},
+		{
+			"name": "7. Ride - Create Ride",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var res = pm.response.json(); pm.collectionVariables.set('rideId', res.data.rideId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"bookingId\": \"{{bookingId}}\", \"userId\": \"{{userId}}\", \"driverId\": \"{{driverId}}\", \"pickup\": {\"lat\": 10.823, \"lng\": 106.629, \"address\": \"12 Nguyen Van Bao\"}, \"destination\": {\"lat\": 10.762, \"lng\": 106.660, \"address\": \"Cho Ben Thanh\"}}"
+				},
+				"url": "{{baseUrl}}/api/v1/rides"
+			}
+		},
+		{
+			"name": "8. Ride - Start Ride (IN_PROGRESS)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{driverToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"driverId\": \"{{driverId}}\"}"
+				},
+				"url": "{{baseUrl}}/api/v1/rides/{{rideId}}/start"
+			}
+		},
+		{
+			"name": "9. Ride - Complete",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer {{driverToken}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"driverId\": \"{{driverId}}\"}"
+				},
+				"url": "{{baseUrl}}/api/v1/rides/{{rideId}}/complete"
+			}
+		},
+		{
+			"name": "10. Final Verify - Driver AVAILABLE",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{driverToken}}"
+					}
+				],
+				"url": "{{baseUrl}}/api/v1/drivers/{{driverId}}"
+			}
+		}
+	]
+}

@@ -1,0 +1,366 @@
+services:
+  admin-dashboard:
+    image: ${REGISTRY}/admin-dashboard:${IMAGE_TAG}
+    networks:
+      - edge-net
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: ${API_PUBLIC_URL}
+    ports:
+      - target: 80
+        published: ${ADMIN_DASHBOARD_PORT}
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: ${ADMIN_DASHBOARD_REPLICAS}
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == edge
+        preferences:
+          - spread: node.labels.region
+
+  customer-app:
+    image: ${REGISTRY}/customer-app:${IMAGE_TAG}
+    networks:
+      - edge-net
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: ${API_PUBLIC_URL}
+      WS_BASE_URL: ${WS_PUBLIC_URL}
+    ports:
+      - target: 80
+        published: ${CUSTOMER_APP_PORT}
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: ${CUSTOMER_APP_REPLICAS}
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == edge
+        preferences:
+          - spread: node.labels.region
+
+  driver-app:
+    image: ${REGISTRY}/driver-app:${IMAGE_TAG}
+    networks:
+      - edge-net
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: ${API_PUBLIC_URL}
+      WS_BASE_URL: ${WS_PUBLIC_URL}
+    ports:
+      - target: 80
+        published: ${DRIVER_APP_PORT}
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: ${DRIVER_APP_REPLICAS}
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == edge
+        preferences:
+          - spread: node.labels.region
+
+  api-gateway:
+    image: ${REGISTRY}/api-gateway:${IMAGE_TAG}
+    networks:
+      - edge-net
+      - backend-net
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      PRICING_SERVICE_URL: http://pricing-service:3101
+      PAYMENT_SERVICE_URL: http://payment-service:3102
+      BOOKING_SERVICE_URL: http://booking-service:3103
+      AUTH_SERVICE_URL: http://auth-service:3104
+      USER_SERVICE_URL: http://user-service:3105
+      REVIEW_SERVICE_URL: http://review-service:3106
+      DRIVER_SERVICE_URL: http://driver-service:3107
+      NOTIFICATION_SERVICE_URL: http://notification-service:3108
+      RIDE_SERVICE_URL: http://ride-service:3109
+    ports:
+      - target: 3000
+        published: ${API_GATEWAY_PORT}
+        protocol: tcp
+        mode: ingress
+    deploy:
+      replicas: ${API_GATEWAY_REPLICAS}
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == edge
+        preferences:
+          - spread: node.labels.region
+
+  pricing-service:
+    image: ${REGISTRY}/pricing-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: &backend-env
+        NODE_ENV: production
+        KAFKA_BROKERS: ${KAFKA_BROKERS}
+        POSTGRES_HOST: postgres
+        POSTGRES_PORT: 5432
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        MONGO_HOST: mongodb
+        MONGO_PORT: 27017
+        MONGO_DB: ${MONGO_DB}
+        MONGO_USER: ${MONGO_INITDB_ROOT_USERNAME}
+        MONGO_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+        REDIS_HOST: redis
+        REDIS_PORT: 6379
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+      PORT: 3101
+    deploy: &app-service-deploy
+      replicas: ${APP_SERVICE_REPLICAS}
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == app
+        preferences:
+          - spread: node.labels.region
+
+  payment-service:
+    image: ${REGISTRY}/payment-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3102
+    deploy: *app-service-deploy
+
+  booking-service:
+    image: ${REGISTRY}/booking-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3103
+    deploy: *app-service-deploy
+
+  auth-service:
+    image: ${REGISTRY}/auth-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3104
+    deploy: *app-service-deploy
+
+  user-service:
+    image: ${REGISTRY}/user-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3105
+    deploy: *app-service-deploy
+
+  review-service:
+    image: ${REGISTRY}/review-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3106
+    deploy: *app-service-deploy
+
+  driver-service:
+    image: ${REGISTRY}/driver-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3107
+    deploy: *app-service-deploy
+
+  notification-service:
+    image: ${REGISTRY}/notification-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3108
+    deploy: *app-service-deploy
+
+  ride-service:
+    image: ${REGISTRY}/ride-service:${IMAGE_TAG}
+    networks:
+      - backend-net
+      - broker-net
+      - data-net
+    environment:
+      <<: *backend-env
+      PORT: 3109
+    deploy: *app-service-deploy
+
+  kafka:
+    image: bitnami/kafka:3.8
+    networks:
+      - broker-net
+    environment:
+      KAFKA_ENABLE_KRAFT: "yes"
+      KAFKA_CFG_NODE_ID: "1"
+      KAFKA_CFG_PROCESS_ROLES: broker,controller
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    volumes:
+      - kafka_data:/bitnami/kafka
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == data
+
+  postgres:
+    image: postgres:16-alpine
+    networks:
+      - data-net
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == data
+
+  mongodb:
+    image: mongo:7
+    networks:
+      - data-net
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == data
+
+  redis:
+    image: redis:7-alpine
+    command: >
+      sh -c "redis-server /usr/local/etc/redis/redis.conf --requirepass \"$$REDIS_PASSWORD\""
+    networks:
+      - data-net
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    configs:
+      - source: redis_conf
+        target: /usr/local/etc/redis/redis.conf
+    volumes:
+      - redis_data:/data
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.labels.tier == data
+
+networks:
+  edge-net:
+    driver: overlay
+    attachable: true
+  backend-net:
+    driver: overlay
+    attachable: true
+  broker-net:
+    driver: overlay
+    attachable: true
+  data-net:
+    driver: overlay
+    attachable: true
+
+volumes:
+  kafka_data:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+
+configs:
+  redis_conf:
+    file: ./configs/redis/redis.conf

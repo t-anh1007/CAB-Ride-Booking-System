@@ -1,0 +1,42 @@
+flowchart TB
+  subgraph globalUsers["Global Users"]
+    userA["Users Region A"]
+    userB["Users Region B"]
+  end
+
+  subgraph globalEdge["Global Edge"]
+    glb["Global Load Balancer"]
+  end
+
+  subgraph regionA["Region A"]
+    subgraph clusterA["Docker Swarm Cluster A"]
+      hpaA["HPA Auto Scaling"]
+      podsA["Service Pods"]
+    end
+  end
+
+  subgraph regionB["Region B"]
+    subgraph clusterB["Docker Swarm Cluster B"]
+      hpaB["HPA Auto Scaling"]
+      podsB["Service Pods"]
+    end
+  end
+
+  subgraph resilience["Resilience Patterns"]
+    cb["Circuit Breaker"]
+    rt["Retry / Timeout"]
+    gd["Graceful Fallback"]
+  end
+
+  subgraph async["Async & Back-pressure"]
+    kafka["Kafka"]
+  end
+
+  userA --> glb
+  userB --> glb
+  glb --> regionA
+  glb --> regionB
+  podsA --> cb --> rt --> gd
+  podsB --> cb
+  podsA --> kafka
+  podsB --> kafka

@@ -1,0 +1,17 @@
+{
+  "eval_id": 0,
+  "eval_name": "gateway-auth-review",
+  "prompt": "Vui lòng review luồng đăng nhập Gateway -> Auth, đặc biệt kiểm tra kịch bản refresh token bị tái sử dụng (replay) và gateway xử lý như nào khi upstream lỗi.",
+  "assertions": [
+    {
+      "name": "includes_required_evidence",
+      "type": "contains",
+      "value": "Required Evidence"
+    },
+    {
+      "name": "uses_correct_result_status",
+      "type": "regex",
+      "value": "\\*\\*Result Status:\\*\\* `(PASS|FAIL|MISSING_EVIDENCE|ARCHITECTURE_DRIFT)`"
+    }
+  ]
+}

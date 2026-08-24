@@ -1,0 +1,16 @@
+{
+  "platform": "Docker Swarm on VirtualBox",
+  "requestedPattern": "Horizontal Pod Autoscaling (HPA)",
+  "implementedAs": "service replica auto scaling policy",
+  "regions": [
+    {
+      "name": "Region A",
+      "cluster": "Docker Swarm Cluster A"
+    },
+    {
+      "name": "Region B",
+      "cluster": "Docker Swarm Cluster B"
+    }
+  ],
+  "scaleCommand": "infra/docker-swarm/scripts/scale-service.ps1"
+}
