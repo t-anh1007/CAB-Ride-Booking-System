@@ -1,93 +1,106 @@
 /**
- * Review Store — Data access layer for review-service.
- *
- * In production this would talk to PostgreSQL (as declared in the manifest).
- * For now an in-memory Map is used so the service is fully runnable without
- * external dependencies while preserving the exact same interface that a real
- * repository would expose.
- *
- * Every public method returns plain objects that match the API contract defined
- * in the project documentation.
+ * Review Store — MongoDB data access for review-service.
  */
 
+import { MongoClient } from "mongodb";
 import { v4 as uuidv4 } from "uuid";
 
-const reviews = new Map();
+const DATABASE_NAME = "cab_booking_review";
+const COLLECTION_NAME = "reviews";
 
-/**
- * Persist a new review and return the stored record.
- *
- * @param {{ rideId: string, userId: string, driverId: string, rating: number, comment?: string }} data
- * @returns {{ reviewId: string, rideId: string, userId: string, driverId: string, rating: number, comment: string|null, createdAt: string }}
- */
-export function createReview(data) {
-  const reviewId = uuidv4();
-  const createdAt = new Date().toISOString();
-
-  const review = {
-    reviewId,
-    rideId: data.rideId,
-    userId: data.userId,
-    driverId: data.driverId,
-    rating: data.rating,
-    comment: data.comment || null,
-    createdAt
-  };
-
-  reviews.set(reviewId, review);
-  return review;
-}
-
-/**
- * Retrieve all reviews associated with a ride.
- *
- * @param {string} rideId
- * @returns {Array}
- */
-export function findByRideId(rideId) {
-  return [...reviews.values()].filter((review) => review.rideId === rideId);
-}
-
-/**
- * Retrieve all reviews targeting a specific driver.
- *
- * @param {string} driverId
- * @returns {Array}
- */
-export function findByDriverId(driverId) {
-  return [...reviews.values()].filter((review) => review.driverId === driverId);
-}
-
-/**
- * Calculate the average rating for a driver.
- * Returns `null` when no reviews exist yet.
- *
- * @param {string} driverId
- * @returns {{ averageRating: number|null, totalReviews: number }}
- */
-export function getDriverAverageRating(driverId) {
-  const driverReviews = findByDriverId(driverId);
-
-  if (driverReviews.length === 0) {
-    return { averageRating: null, totalReviews: 0 };
+export class MongoReviewStore {
+  constructor({ client }) {
+    this.client = client;
+    this.collection = client.db(DATABASE_NAME).collection(COLLECTION_NAME);
   }
 
-  const sum = driverReviews.reduce((accumulator, review) => accumulator + review.rating, 0);
-  const averageRating = Math.round((sum / driverReviews.length) * 100) / 100;
+  async initialize() {
+    await this.collection.createIndex(
+      { rideId: 1, userId: 1 },
+      { unique: true, name: "rideId_1_userId_1" }
+    );
+  }
 
-  return { averageRating, totalReviews: driverReviews.length };
+  async createReview(data) {
+    const review = {
+      reviewId: uuidv4(),
+      rideId: data.rideId,
+      userId: data.userId,
+      driverId: data.driverId,
+      rating: data.rating,
+      comment: data.comment || null,
+      createdAt: new Date().toISOString()
+    };
+
+    await this.collection.insertOne(review);
+    return serializeReview(review);
+  }
+
+  async findByRideId(rideId) {
+    const reviews = await this.collection
+      .find({ rideId })
+      .sort({ createdAt: 1 })
+      .toArray();
+    return reviews.map(serializeReview);
+  }
+
+  async findByDriverId(driverId) {
+    const reviews = await this.collection
+      .find({ driverId })
+      .sort({ createdAt: 1 })
+      .toArray();
+    return reviews.map(serializeReview);
+  }
+
+  async getDriverAverageRating(driverId) {
+    const driverReviews = await this.findByDriverId(driverId);
+
+    if (driverReviews.length === 0) {
+      return { averageRating: null, totalReviews: 0 };
+    }
+
+    const sum = driverReviews.reduce((total, review) => total + review.rating, 0);
+    return {
+      averageRating: Math.round((sum / driverReviews.length) * 100) / 100,
+      totalReviews: driverReviews.length
+    };
+  }
+
+  async findExistingReview(rideId, userId) {
+    return serializeReview(await this.collection.findOne({ rideId, userId }));
+  }
+
+  async close() {
+    await this.client.close();
+  }
 }
 
-/**
- * Check whether a user has already reviewed a specific ride.
- * Used for idempotency at the service level (gateway also enforces this).
- *
- * @param {string} rideId
- * @param {string} userId
- * @returns {object|null}
- */
-export function findExistingReview(rideId, userId) {
-  return [...reviews.values()].find(
-    (review) => review.rideId === rideId && review.userId === userId
-  ) || null;
+export async function createMongoReviewStore({ mongoUri = process.env.MONGO_URI } = {}) {
+  if (!mongoUri) {
+    throw new Error("MONGO_URI is required for review-service");
+  }
+
+  const client = new MongoClient(mongoUri, {
+    serverSelectionTimeoutMS: 5_000
+  });
+
+  try {
+    await client.connect();
+    const store = new MongoReviewStore({ client });
+    await store.initialize();
+    return store;
+  } catch (error) {
+    await client.close().catch(() => {});
+    throw error;
+  }
+}
+
+function serializeReview(document) {
+  if (!document) {
+    return null;
+  }
+
+  const review = { ...document };
+  delete review._id;
+  return review;
 }

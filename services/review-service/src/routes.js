@@ -2,10 +2,10 @@
  * Review Routes — REST API handlers for review-service.
  *
  * Endpoints:
- *   POST   /api/v1/reviews                  → Gửi đánh giá chuyến đi
- *   GET    /api/v1/reviews/ride/:rideId      → Xem đánh giá theo chuyến
- *   GET    /api/v1/reviews/driver/:driverId  → Xem đánh giá theo tài xế
- *   GET    /api/v1/reviews/driver/:driverId/average → Điểm đánh giá trung bình
+ *   POST /api/v1/reviews                          → Gửi đánh giá
+ *   GET  /api/v1/reviews/ride/:rideId             → Đánh giá theo chuyến đi
+ *   GET  /api/v1/reviews/driver/:driverId         → Đánh giá theo tài xế
+ *   GET  /api/v1/reviews/driver/:driverId/average → Điểm đánh giá trung bình
  *
  * Response envelope follows the gateway's normalized format:
  *   { success, message, data, meta: { requestId, correlationId, timestamp } }
@@ -13,15 +13,8 @@
 
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
-import {
-  createReview,
-  findByRideId,
-  findByDriverId,
-  getDriverAverageRating,
-  findExistingReview
-} from "./store.js";
 
-export function createReviewRouter({ broker }) {
+export function createReviewRouter({ store, publisher, logger = console }) {
   const router = Router();
 
   // ──────────────────────────────────────────────────────────────
@@ -53,21 +46,26 @@ export function createReviewRouter({ broker }) {
       }
 
       // --- Idempotency: one review per user per ride ---
-      const existing = findExistingReview(rideId, userId);
+      const existing = await store.findExistingReview(rideId, userId);
       if (existing) {
-        return response.status(409).json({
-          success: false,
-          message: "User has already reviewed this ride",
-          data: existing,
-          meta
-        });
+        return duplicateResponse(response, meta, existing);
       }
 
       // --- Persist ---
-      const review = createReview({ rideId, userId, driverId, rating, comment });
+      let review;
+      try {
+        review = await store.createReview({ rideId, userId, driverId, rating, comment });
+      } catch (error) {
+        if (error?.code !== 11000) {
+          throw error;
+        }
 
-      // --- Publish event (non-blocking) ---
-      publishReviewCreated(broker, review);
+        const duplicate = await store.findExistingReview(rideId, userId);
+        return duplicateResponse(response, meta, duplicate);
+      }
+
+      // --- Publish event without changing a successful response on failure ---
+      publishReviewCreated(publisher, review, logger);
 
       return response.status(201).json({
         success: true,
@@ -76,7 +74,7 @@ export function createReviewRouter({ broker }) {
         meta
       });
     } catch (error) {
-      console.error("[review-service] POST /api/v1/reviews error:", error);
+      logger.error?.("[review-service] POST /api/v1/reviews error:", error);
 
       return response.status(500).json({
         success: false,
@@ -90,11 +88,11 @@ export function createReviewRouter({ broker }) {
   // ──────────────────────────────────────────────────────────────
   // GET /api/v1/reviews/ride/:rideId — Đánh giá theo chuyến đi
   // ──────────────────────────────────────────────────────────────
-  router.get("/api/v1/reviews/ride/:rideId", (request, response) => {
+  router.get("/api/v1/reviews/ride/:rideId", async (request, response) => {
     const meta = buildMeta();
 
     try {
-      const reviews = findByRideId(request.params.rideId);
+      const reviews = await store.findByRideId(request.params.rideId);
 
       return response.status(200).json({
         success: true,
@@ -103,7 +101,7 @@ export function createReviewRouter({ broker }) {
         meta
       });
     } catch (error) {
-      console.error("[review-service] GET /ride/:rideId error:", error);
+      logger.error?.("[review-service] GET /ride/:rideId error:", error);
 
       return response.status(500).json({
         success: false,
@@ -117,12 +115,12 @@ export function createReviewRouter({ broker }) {
   // ──────────────────────────────────────────────────────────────
   // GET /api/v1/reviews/driver/:driverId — Đánh giá theo tài xế
   // ──────────────────────────────────────────────────────────────
-  router.get("/api/v1/reviews/driver/:driverId", (request, response) => {
+  router.get("/api/v1/reviews/driver/:driverId", async (request, response) => {
     const meta = buildMeta();
 
     try {
-      const reviews = findByDriverId(request.params.driverId);
-      const { averageRating, totalReviews } = getDriverAverageRating(request.params.driverId);
+      const reviews = await store.findByDriverId(request.params.driverId);
+      const { averageRating, totalReviews } = await store.getDriverAverageRating(request.params.driverId);
 
       return response.status(200).json({
         success: true,
@@ -136,7 +134,7 @@ export function createReviewRouter({ broker }) {
         meta
       });
     } catch (error) {
-      console.error("[review-service] GET /driver/:driverId error:", error);
+      logger.error?.("[review-service] GET /driver/:driverId error:", error);
 
       return response.status(500).json({
         success: false,
@@ -150,11 +148,11 @@ export function createReviewRouter({ broker }) {
   // ──────────────────────────────────────────────────────────────
   // GET /api/v1/reviews/driver/:driverId/average — Điểm trung bình
   // ──────────────────────────────────────────────────────────────
-  router.get("/api/v1/reviews/driver/:driverId/average", (request, response) => {
+  router.get("/api/v1/reviews/driver/:driverId/average", async (request, response) => {
     const meta = buildMeta();
 
     try {
-      const { averageRating, totalReviews } = getDriverAverageRating(request.params.driverId);
+      const { averageRating, totalReviews } = await store.getDriverAverageRating(request.params.driverId);
 
       return response.status(200).json({
         success: true,
@@ -167,7 +165,7 @@ export function createReviewRouter({ broker }) {
         meta
       });
     } catch (error) {
-      console.error("[review-service] GET /driver/:driverId/average error:", error);
+      logger.error?.("[review-service] GET /driver/:driverId/average error:", error);
 
       return response.status(500).json({
         success: false,
@@ -191,21 +189,31 @@ function buildMeta() {
   };
 }
 
-function publishReviewCreated(broker, review) {
-  if (!broker || !broker.connected) {
-    return;
-  }
+function duplicateResponse(response, meta, existing) {
+  return response.status(409).json({
+    success: false,
+    message: "User has already reviewed this ride",
+    data: existing,
+    meta
+  });
+}
 
-  try {
-    console.log("[review-service] Publishing ReviewCreated event:", {
+function publishReviewCreated(publisher, review, logger) {
+  const value = JSON.stringify({
+    reviewId: review.reviewId,
+    rideId: review.rideId,
+    userId: review.userId,
+    driverId: review.driverId,
+    rating: review.rating,
+    timestamp: review.createdAt
+  });
+
+  Promise.resolve()
+    .then(() => publisher.send({
       topic: "review.created",
-      reviewId: review.reviewId,
-      rideId: review.rideId,
-      driverId: review.driverId,
-      rating: review.rating
+      messages: [{ key: review.rideId, value }]
+    }))
+    .catch((error) => {
+      logger.error?.("[review-service] Failed to publish ReviewCreated:", error);
     });
-  } catch (error) {
-    // Non-blocking — log and move on (eventual consistency)
-    console.error("[review-service] Failed to publish ReviewCreated:", error);
-  }
 }

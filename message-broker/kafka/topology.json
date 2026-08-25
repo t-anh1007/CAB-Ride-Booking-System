@@ -13,6 +13,11 @@
       "producer": "booking-service"
     },
     {
+      "name": "ReviewCreated",
+      "topic": "review.created",
+      "producer": "review-service"
+    },
+    {
       "name": "DriverAssigned",
       "topic": "driver.assigned",
       "producer": "driver-service"

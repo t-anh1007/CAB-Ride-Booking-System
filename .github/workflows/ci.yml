@@ -21,6 +21,9 @@ jobs:
           - name: auth-service
             directory: services/auth-service
             command: npm test
+          - name: review-service
+            directory: services/review-service
+            command: npm test
           - name: notification-service
             directory: services/notification-service
             command: node --test test/notification-service.test.js
