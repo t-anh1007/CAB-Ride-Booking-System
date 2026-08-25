@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from app.database import connect_db, close_db
 from app.routers.features import router as feature_router
 from app.routers import health
+from app.routers.agent import router as agent_router
 from app.routers.matching import router as matching_router
 
 logging.basicConfig(
@@ -42,4 +43,5 @@ app = FastAPI(
 # ── Routes ────────────────────────────────────────────────────────────────────
 app.include_router(health.router, tags=["Health"])
 # Removed: matching_router
-# Removed: feature_router (following 'Xóa bỏ HTTP API Controller' instruction)
+# Existing matching routes remain internal; agent is explicitly exposed.
+app.include_router(agent_router)

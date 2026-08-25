@@ -49,7 +49,7 @@ jobs:
             command: node --test test/notification-service.test.js
           - name: eta-service
             directory: AI-ML/eta-service
-            command: node --test test/tracking.test.js
+            command: node --test test/*.test.js
           - name: governance
             directory: .
             command: npm run test:governance
@@ -74,6 +74,8 @@ jobs:
         include:
           - name: matching-service
             directory: AI-ML/matching-service
+          - name: ai-insights-service
+            directory: AI-ML/ai-insights-service
           - name: surge-pricing-service
             directory: AI-ML/surge-pricing-service
     steps:
