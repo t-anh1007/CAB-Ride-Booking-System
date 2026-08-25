@@ -8,6 +8,7 @@ import test from 'node:test';
 
 const cli = path.resolve('.agents/governance/scripts/governance-cli.mjs');
 const sha = (value) => createHash('sha256').update(value).digest('hex');
+const canonical = (value) => value === null || typeof value !== 'object' ? JSON.stringify(value) : Array.isArray(value) ? `[${value.map(canonical).join(',')}]` : `{${Object.keys(value).sort().map(k => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
 
 async function fixture() {
   const repo = await mkdtemp(path.join(tmpdir(), 'cab-governance-'));
@@ -44,6 +45,29 @@ async function fixture() {
     await writeFile(path.join(repo, `${name}.json`), JSON.stringify(value, null, 2));
   }
   return { repo, packet, authority, lease, operation };
+}
+
+async function auditFixture(state = 'REWORK') {
+  const { repo, packet } = await fixture();
+  const target = await readFile(path.join(repo, 'target.txt'));
+  const manifest = [{ path: 'target.txt', sha256: sha(target) }];
+  const snapshot = sha(canonical(manifest));
+  const now = new Date().toISOString();
+  packet.state = state;
+  packet.participants.auditor = 'auditor';
+  packet.execution_complexity = 'HARD';
+  packet.assurance_risk = 'HIGH';
+  packet.requested_runtime = { model: 'sol', reasoning: 'xhigh', enforced: false };
+  packet.candidate = { manifest, snapshot_sha256: snapshot, frozen_at: now, author_id: 'worker' };
+  packet.audit = { report_id: 'AUDIT-FAILED', verdict: 'FAIL', findings: [{ id: 'FINDING-OLD' }] };
+  const report = {
+    schema_version: 1, id: 'AUDIT-REAUDIT-PASS', packet_id: packet.id, auditor_id: 'auditor',
+    candidate_snapshot_sha256: snapshot, evidence_integrity: 'VALID', drift_detected: false,
+    findings: [], verdict: 'PASS', created_at: now
+  };
+  await writeFile(path.join(repo, 'packet.json'), JSON.stringify(packet, null, 2));
+  await writeFile(path.join(repo, 'report.json'), JSON.stringify(report, null, 2));
+  return { repo, packet, report };
 }
 
 function run(repo, ...args) {
@@ -131,4 +155,67 @@ test('schema validation rejects unknown properties', async () => {
   const result = run(repo, 'validate', '--type', 'packet', '--file', 'packet.json');
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /additional property/i);
+});
+
+test('Auditor can re-audit an unchanged REWORK candidate', async () => {
+  const { repo, packet, report } = await auditFixture();
+  const result = run(repo, 'audit', '--packet', 'packet.json', '--report', 'report.json', '--actor', 'auditor');
+  assert.equal(result.status, 0, result.stderr);
+  const updated = JSON.parse(await readFile(path.join(repo, 'packet.json'), 'utf8'));
+  assert.equal(updated.state, 'COORDINATOR_REVIEW');
+  assert.deepEqual(updated.candidate, packet.candidate);
+  assert.deepEqual(updated.audit, { report_id: report.id, verdict: 'PASS', findings: [] });
+  assert.equal(updated.events.at(-1).action, 'AUDIT_SUBMITTED');
+});
+
+test('REWORK re-audit fails closed on frozen candidate drift', async () => {
+  const { repo } = await auditFixture();
+  await writeFile(path.join(repo, 'target.txt'), 'drift\n');
+  const result = run(repo, 'audit', '--packet', 'packet.json', '--report', 'report.json', '--actor', 'auditor');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Frozen candidate drift/i);
+  const unchanged = JSON.parse(await readFile(path.join(repo, 'packet.json'), 'utf8'));
+  assert.equal(unchanged.state, 'REWORK');
+  assert.equal(unchanged.audit.verdict, 'FAIL');
+});
+
+test('audit still rejects a non-auditable packet state', async () => {
+  const { repo } = await auditFixture('WRITING');
+  const result = run(repo, 'audit', '--packet', 'packet.json', '--report', 'report.json', '--actor', 'auditor');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Packet is not auditable/i);
+});
+
+test('REWORK re-audit preserves exact report identity and snapshot checks', async () => {
+  const cases = [
+    ['packet identity', (report) => { report.packet_id = 'PKT-OTHER'; }],
+    ['auditor identity', (report) => { report.auditor_id = 'auditor-other'; }],
+    ['candidate snapshot', (report) => { report.candidate_snapshot_sha256 = '0'.repeat(64); }]
+  ];
+  for (const [label, mutate] of cases) {
+    const { repo, report } = await auditFixture();
+    mutate(report);
+    await writeFile(path.join(repo, 'report.json'), JSON.stringify(report, null, 2));
+    const result = run(repo, 'audit', '--packet', 'packet.json', '--report', 'report.json', '--actor', 'auditor');
+    assert.notEqual(result.status, 0, label);
+    assert.match(result.stderr, /Audit report does not match frozen candidate/i, label);
+  }
+});
+
+test('REWORK re-audit rejects a report that declares drift', async () => {
+  const { repo, report } = await auditFixture();
+  report.drift_detected = true;
+  await writeFile(path.join(repo, 'report.json'), JSON.stringify(report, null, 2));
+  const result = run(repo, 'audit', '--packet', 'packet.json', '--report', 'report.json', '--actor', 'auditor');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Audit report does not match frozen candidate/i);
+});
+
+test('REWORK re-audit preserves independent Auditor separation', async () => {
+  const { repo, packet } = await auditFixture();
+  packet.candidate.author_id = 'auditor';
+  await writeFile(path.join(repo, 'packet.json'), JSON.stringify(packet, null, 2));
+  const result = run(repo, 'audit', '--packet', 'packet.json', '--report', 'report.json', '--actor', 'auditor');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /cannot audit its own candidate/i);
 });

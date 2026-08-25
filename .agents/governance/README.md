@@ -49,6 +49,8 @@ npm run governance -- review --packet .agents/governance/runtime/packet.json --a
 
 Use `audit --packet ... --report ... --actor auditor` for required audit, `handoff --packet ... --handoff ... --actor specialist|worker|auditor` for evidence transport, and `status --packet ...` for a compact state view.
 
+A frozen candidate may be audited from `AUDIT_REQUIRED`, `CANDIDATE_FROZEN`, or `REWORK`. Re-audit from `REWORK` is only for an unchanged candidate after external successor work resolves a finding: the CLI re-verifies the frozen manifest, requires an independent Auditor, rejects report identity, snapshot, or declared-drift mismatches, and transitions only to `COORDINATOR_REVIEW`. Coordinator review remains required before acceptance.
+
 ## Validation
 
 ```powershell
