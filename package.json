@@ -4,6 +4,7 @@
   "type": "module",
   "workspaces": [
     "apps/*",
+    "packages/*",
     "gateway/*",
     "services/*",
     "AI-ML/*"
@@ -34,6 +35,8 @@
     "test:governance": "node --test ./.agents/governance/test/governance-cli.test.mjs"
   },
   "dependencies": {
-    "kafkajs": "^2.2.4"
+    "kafkajs": "^2.2.4",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1"
   }
 }

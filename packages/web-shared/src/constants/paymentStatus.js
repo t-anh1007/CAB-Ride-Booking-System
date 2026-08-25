@@ -1,0 +1,1 @@
+export const PAYMENT_STATUS=["PENDING","COMPLETED","FAILED"];

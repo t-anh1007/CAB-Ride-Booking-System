@@ -1,0 +1,1 @@
+import{BrowserRouter}from"react-router-dom";import{AuthProvider}from"./providers/AuthProvider.jsx";import{RealtimeProvider}from"./providers/RealtimeProvider.jsx";import Router from"./router.jsx";export default function App(){return <BrowserRouter><AuthProvider><RealtimeProvider><Router/></RealtimeProvider></AuthProvider></BrowserRouter>}

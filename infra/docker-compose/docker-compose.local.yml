@@ -475,6 +475,25 @@ services:
     networks:
       - cab-broker
 
+  customer-app:
+    profiles: [web]
+    build: { context: ../.., dockerfile: apps/customer-app/Dockerfile }
+    ports: ["5174:80"]
+    mem_limit: 64m
+    networks: [cab-edge]
+  driver-app:
+    profiles: [web]
+    build: { context: ../.., dockerfile: apps/driver-app/Dockerfile }
+    ports: ["5175:80"]
+    mem_limit: 64m
+    networks: [cab-edge]
+  admin-dashboard:
+    profiles: [web]
+    build: { context: ../.., dockerfile: apps/admin-dashboard/Dockerfile }
+    ports: ["5176:80"]
+    mem_limit: 64m
+    networks: [cab-edge]
+
 volumes:
   cab_mongodb_data:
   cab_redis_data:

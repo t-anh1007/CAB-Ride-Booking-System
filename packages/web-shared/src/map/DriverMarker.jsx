@@ -1,0 +1,1 @@
+import L from"leaflet";import{Marker}from"react-leaflet";export function DriverMarker({position,heading=0}){const icon=L.divIcon({className:"",html:"<span style='display:block;font-size:27px;color:#1565c0;transform:rotate("+heading+"deg)'>➤</span>"});return position?<Marker position={position} icon={icon}/>:null}

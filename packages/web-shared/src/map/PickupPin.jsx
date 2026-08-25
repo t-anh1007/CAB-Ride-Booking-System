@@ -1,0 +1,1 @@
+import L from"leaflet";import{Marker}from"react-leaflet";const icon=L.divIcon({className:"",html:"<span style='font-size:30px;color:#0f8b5d'>●</span>"});export function PickupPin({position,draggable=false,onDragEnd}){return <Marker position={position} icon={icon} draggable={draggable} eventHandlers={onDragEnd?{dragend:onDragEnd}:{}}/>}

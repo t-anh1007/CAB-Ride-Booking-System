@@ -1,0 +1,1 @@
+import DataState from"../components/DataState.jsx";export default function AuditLogPage(){return <section><h1>Nhật ký audit</h1><DataState>Gateway chưa công bố endpoint audit đọc cho admin. Màn hình được giữ read-only; không tạo dữ liệu hoặc mutation giả.</DataState></section>}

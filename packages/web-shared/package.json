@@ -1,0 +1,15 @@
+{
+  "name": "@cab/web-shared",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "peerDependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  }
+}
