@@ -15,6 +15,16 @@ const formatResponse = (message, data, req) => ({
 
 const VALID_PAYMENT_METHODS = ['CASH', 'CREDIT_CARD', 'E_WALLET'];
 
+function serializeBooking(booking) {
+    const value = booking?.toObject ? booking.toObject() : booking;
+    const createdAt = value?.createdAt instanceof Date ? value.createdAt.toISOString() : value?.createdAt;
+    return {
+        ...value,
+        booking_id: value?.bookingId,
+        created_at: createdAt
+    };
+}
+
 function normalizePaymentMethod(value) {
     if (!value) {
         return 'CASH';
@@ -61,7 +71,7 @@ export const createBooking = async (req, res) => {
         // [TC19] Xử lý trùng lặp request
         let existingBooking = await Booking.findOne({ idempotencyKey });
         if (existingBooking) {
-            return res.status(200).json(formatResponse("Booking already exists", existingBooking, req));
+            return res.status(200).json(formatResponse("Booking already exists", serializeBooking(existingBooking), req));
         }
 
         const { userId, pickup, distanceKm, vehicleType, paymentMethod, quoteId } = req.body;
@@ -158,7 +168,7 @@ export const createBooking = async (req, res) => {
             timestamp: newBooking.createdAt
         });
 
-        res.status(201).json(formatResponse("Booking created successfully", newBooking, req));
+        res.status(201).json(formatResponse("Booking created successfully", serializeBooking(newBooking), req));
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -174,7 +184,7 @@ export const getUserBookings = async (req, res) => {
         }
 
         const bookings = await Booking.find({ userId }).sort({ createdAt: -1 });
-        res.status(200).json(formatResponse("Retrieved user bookings", bookings, req));
+        res.status(200).json(formatResponse("Retrieved user bookings", bookings.map(serializeBooking), req));
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

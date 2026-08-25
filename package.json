@@ -30,7 +30,7 @@
     "inspect:resilience": "node ./platform/architecture/print-resilience-topology.js",
     "governance": "node ./.agents/governance/scripts/governance-cli.mjs",
     "smoke": "node ./scripts/smoke.mjs",
-    "test:all": "npm test --workspace @cab/api-gateway && npm test --workspace @cab/auth-service && npm test --workspace @cab/review-service && node --test ./services/notification-service/test/notification-service.test.js ./AI-ML/eta-service/test/tracking.test.js && npm run test:governance && cd AI-ML/matching-service && python -m pytest app/tests -q && cd ../surge-pricing-service && python -m pytest app/tests -q",
+    "test:all": "npm test --workspace @cab/api-gateway && npm test --workspace @cab/auth-service && npm test --workspace @cab/booking-service && npm test --workspace @cab/payment-service && npm test --workspace @cab/ride-service && npm test --workspace @cab/pricing-service && npm test --workspace @cab/driver-service && npm test --workspace @cab/user-service && npm test --workspace @cab/review-service && node --test ./services/notification-service/test/notification-service.test.js ./AI-ML/eta-service/test/tracking.test.js && npm run test:governance && cd AI-ML/matching-service && python -m pytest app/tests -q && cd ../surge-pricing-service && python -m pytest app/tests -q",
     "test:governance": "node --test ./.agents/governance/test/governance-cli.test.mjs"
   },
   "dependencies": {

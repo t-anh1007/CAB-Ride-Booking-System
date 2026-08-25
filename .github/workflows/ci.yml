@@ -23,6 +23,24 @@ jobs:
           - name: auth-service
             directory: services/auth-service
             command: npm test
+          - name: booking-service
+            directory: services/booking-service
+            command: npm test
+          - name: payment-service
+            directory: services/payment-service
+            command: npm test
+          - name: ride-service
+            directory: services/ride-service
+            command: npm test
+          - name: pricing-service
+            directory: services/pricing-service
+            command: npm test
+          - name: driver-service
+            directory: services/driver-service
+            command: npm test
+          - name: user-service
+            directory: services/user-service
+            command: npm test
           - name: review-service
             directory: services/review-service
             command: npm test

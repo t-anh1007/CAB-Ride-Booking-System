@@ -4,6 +4,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --experimental-test-module-mocks --test test/*.test.js",
     "dev": "node index.js",
     "start": "node index.js"
   },
