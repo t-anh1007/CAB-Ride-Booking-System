@@ -41,6 +41,19 @@ As Coordinator:
 
 The Owner chat must not directly spawn or route Specialist, Worker, or Auditor. Coordinator owns all subordinate routing and handoffs.
 
+## Lite mode (default when governance is active)
+
+Keep the full team loop `Coordinator -> Specialist/Worker -> Auditor`, but run it lean. Unless the Owner asks for strict mode, default to:
+
+- **One packet per unit of work.** Scope each packet to a whole coherent unit (a feature or a plan phase) with a broad-but-explicit path allowlist. Do not open a separate packet per file or per line.
+- **Skip audit for LOW.** Rate routine EASY/MEDIUM work as LOW/MODERATE and take the `review --decision skip-audit` path (recorded rationale). Then most work is just `Coordinator -> Worker -> Coordinator`.
+- **Auditor only when it must run.** Invoke Auditor only for security-sensitive, HIGH, or CRITICAL packets. Never downgrade those to skip audit.
+- **Specialist only when there is real uncertainty.** If the approach is already clear in the plan, Coordinator routes straight to Worker. Reserve Specialist for genuine analysis.
+- **Scope tests to the change.** Acceptance criteria run the unit tests of the touched service(s) only, not the full matrix or `test:governance`, unless the packet is CRITICAL or changes governance itself.
+- **Housekeeping.** `.agents/governance/runtime/` is gitignored; clear stale packet artifacts periodically.
+
+Strict mode (every packet audited, full test suite, per-file granularity) applies only when the Owner explicitly requests it or for CRITICAL packets.
+
 ## Routed profiles
 
 The rest of this file applies only while governance is active.
@@ -57,7 +70,8 @@ If profile identity, packet state, authority, baseline, allowlist, lease, expiry
 
 - EASY + LOW: request `luna / medium`.
 - MEDIUM or balanced work: request `terra / high`.
-- HARD, security-sensitive, HIGH, or CRITICAL: request `sol / high|xhigh`.
+- HARD: request `terra / high`.
+- Security-sensitive, HIGH, or CRITICAL: request `sol / high|xhigh`.
 - Deep CRITICAL audit may request `sol / ultra`.
 
 These tuples express routing intent only. Never claim the runtime enforced a requested model or reasoning effort without platform evidence.
@@ -67,6 +81,7 @@ HIGH and CRITICAL assurance risk require an independent Auditor. LOW may skip au
 ## Change and integration controls
 
 - Preserve unrelated worktree changes. Stage explicit paths only.
-- Do not commit, push, merge, deploy, delete, or perform destructive changes without explicit Owner authorization.
+- Standing authorization: after a task/packet is complete, commit the task's explicit paths and push to the `dev` branch without asking again. Use a clear conventional-commit message.
+- Still require explicit Owner authorization for merge, deploy, delete, force-push, or pushing to any branch other than `dev` (in particular `main`). Never do these on your own; act only when the Owner asks.
 - A Coordinator may authorize a Worker write but may not perform the write itself.
 - Only Coordinator may accept a candidate, route rework, stop a packet, or dispose an Auditor finding with recorded rationale.
