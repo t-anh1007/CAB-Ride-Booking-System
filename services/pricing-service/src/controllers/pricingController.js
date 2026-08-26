@@ -105,3 +105,26 @@ export const getQuote = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export const getSurgeStatus = async (req, res) => {
+    const zoneId = String(req.query.zone || '').trim();
+    if (!zoneId) {
+        return res.status(422).json({ success: false, message: 'zone is required' });
+    }
+
+    const requestId = req.headers['x-request-id'] || uuidv4();
+    try {
+        const surge = await evaluateSurge({ zoneId, requestId });
+        return res.status(200).json(formatResponse('Surge status fetched', {
+            zoneId,
+            supplyCount: surge.supplyCount,
+            demandCount: surge.demandCount,
+            surgeMultiplier: surge.surgeMultiplier,
+            surgeSource: surge.surgeSource,
+            available: surge.available
+        }, req));
+    } catch (error) {
+        logger.error('Error fetching surge status', { requestId, error: error.message });
+        return res.status(500).json({ success: false, message: 'Unable to fetch surge status' });
+    }
+};
