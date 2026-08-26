@@ -1,0 +1,257 @@
+{
+  "info": {
+    "name": "CAB Levels — grading scoreboard",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Master newman collection driving scripts/run-levels.ps1. One folder per grading level. Folders map to final_PROJECT_grading-factor TC ranges. Add requests to a Level folder to grow coverage; run-levels.ps1 tallies pass/fail per folder."
+  },
+  "item": [
+    {
+      "name": "_00_setup",
+      "item": [
+        {
+          "name": "customer login (OTP request+verify)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "// two-step OTP inline: this request only does the OTP request; verify is next",
+                "pm.test('OTP request accepted', () => {",
+                "  pm.expect(pm.response.code).to.be.oneOf([200,202]);",
+                "  const j = pm.response.json();",
+                "  const otp = j.data && (j.data.debugOtpCode || j.data.otp);",
+                "  pm.expect(otp, 'debugOtpCode present in dev mode').to.exist;",
+                "  pm.environment.set('customerOtp', otp);",
+                "});"
+              ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login/otp/request", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","login","otp","request"] },
+            "body": { "mode": "raw", "raw": "{\n  \"destination\": \"{{customerPhone}}\",\n  \"role\": \"customer\",\n  \"channel\": \"sms\"\n}" }
+          }
+        },
+        {
+          "name": "customer verify -> token",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Customer login returns JWT', () => {",
+                "  pm.response.to.have.status(200);",
+                "  const j = pm.response.json();",
+                "  const token = j.data.accessToken || (j.data.tokens && j.data.tokens.accessToken);",
+                "  const refresh = j.data.refreshToken || (j.data.tokens && j.data.tokens.refreshToken);",
+                "  pm.expect(token, 'accessToken').to.exist;",
+                "  pm.environment.set('customerAccessToken', token);",
+                "  if (refresh) pm.environment.set('customerRefreshToken', refresh);",
+                "  const uid = j.data.userId || j.data.user && j.data.user.id;",
+                "  if (uid) pm.environment.set('customerUserId', uid);",
+                "});"
+              ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/v1/auth/login/otp/verify", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","login","otp","verify"] },
+            "body": { "mode": "raw", "raw": "{\n  \"destination\": \"{{customerPhone}}\",\n  \"role\": \"customer\",\n  \"code\": \"{{customerOtp}}\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Level 1 - Basic API (TC1-2, 21-22)",
+      "item": [
+        {
+          "name": "TC21 pricing quote",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Quote returns priced snapshot', () => {",
+                "  pm.response.to.have.status(200);",
+                "  const d = pm.response.json().data;",
+                "  pm.expect(d.quoteId, 'quoteId').to.exist;",
+                "  pm.expect(d.priceSnapshot.amount, 'amount>0').to.be.above(0);",
+                "  pm.expect(d.priceSnapshot.surgeMultiplier).to.be.at.least(1);",
+                "  pm.environment.set('quoteId', d.quoteId);",
+                "  pm.environment.set('lockedAmount', d.priceSnapshot.amount);",
+                "});"
+              ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerAccessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/pricing/quote", "host": ["{{baseUrl}}"], "path": ["api","v1","pricing","quote"] },
+            "body": { "mode": "raw", "raw": "{\n  \"pickupAddress\": \"IUH\",\n  \"destinationAddress\": \"Ben Thanh\",\n  \"vehicleType\": \"bike\",\n  \"pickupLat\": 10.76,\n  \"pickupLng\": 106.66,\n  \"dropLat\": 10.77,\n  \"dropLng\": 106.70\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Level 2 - Validation & Idempotency (TC11-12, 19, 31)",
+      "item": [
+        {
+          "name": "TC11 quote missing field -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Missing field rejected (400/422)', () => {",
+                "  pm.expect(pm.response.code).to.be.oneOf([400,422]);",
+                "});"
+              ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerAccessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/pricing/quote", "host": ["{{baseUrl}}"], "path": ["api","v1","pricing","quote"] },
+            "body": { "mode": "raw", "raw": "{\n  \"pickupAddress\": \"IUH\"\n}" }
+          }
+        },
+        {
+          "name": "TC31 idempotent booking (1st)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "exec": [ "pm.environment.set('idemKey', 'idem-' + Math.random().toString(36).slice(2));" ] }
+            },
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Booking created', () => {",
+                "  pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+                "  const d = pm.response.json().data;",
+                "  const id = d.bookingId || d.id;",
+                "  pm.expect(id, 'bookingId').to.exist;",
+                "  pm.environment.set('bookingId', id);",
+                "});"
+              ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerAccessToken}}" },
+              { "key": "Idempotency-Key", "value": "{{idemKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/bookings", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"pickup\": {\"lat\": 10.76, \"lng\": 106.66},\n  \"drop\": {\"lat\": 10.77, \"lng\": 106.70},\n  \"vehicleType\": \"bike\",\n  \"paymentMethod\": \"CASH\",\n  \"quoteId\": \"{{quoteId}}\"\n}" }
+          }
+        },
+        {
+          "name": "TC31 idempotent booking (replay, same key) -> same id",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerAccessToken}}" },
+              { "key": "Idempotency-Key", "value": "{{idemKey}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/bookings", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"pickup\": {\"lat\": 10.76, \"lng\": 106.66},\n  \"drop\": {\"lat\": 10.77, \"lng\": 106.70},\n  \"vehicleType\": \"bike\",\n  \"paymentMethod\": \"CASH\",\n  \"quoteId\": \"{{quoteId}}\"\n}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Replay returns same bookingId (idempotent)', () => {",
+                "  pm.expect(pm.response.code).to.be.oneOf([200,201]);",
+                "  const d = pm.response.json().data;",
+                "  const id = d.bookingId || d.id;",
+                "  pm.expect(id).to.eql(pm.environment.get('bookingId'));",
+                "});"
+              ] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Level 4 - Payment & Saga (TC24, 33-34)",
+      "item": [
+        {
+          "name": "TC24.1 create payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": [
+                "pm.test('Payment accepted', () => {",
+                "  pm.expect(pm.response.code).to.be.oneOf([200,201,202]);",
+                "  const d = pm.response.json().data;",
+                "  const id = d.paymentId || d.id;",
+                "  pm.expect(id, 'paymentId').to.exist;",
+                "  pm.environment.set('paymentId', id);",
+                "});"
+              ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerAccessToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/v1/payments", "host": ["{{baseUrl}}"], "path": ["api","v1","payments"] },
+            "body": { "mode": "raw", "raw": "{\n  \"rideId\": \"{{bookingId}}\",\n  \"userId\": \"{{customerUserId}}\",\n  \"amount\": {{lockedAmount}},\n  \"method\": \"CASH\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Level 9 - Security (TC85, 91-95, 98)",
+      "item": [
+        {
+          "name": "TC91 no token -> 401",
+          "event": [
+            { "listen": "test", "script": { "exec": [
+              "pm.test('Missing token rejected 401', () => { pm.response.to.have.status(401); });"
+            ] } }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/bookings", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings"] }
+          }
+        },
+        {
+          "name": "TC92 tampered token -> 401",
+          "event": [
+            { "listen": "test", "script": { "exec": [
+              "pm.test('Tampered token rejected 401', () => { pm.response.to.have.status(401); });"
+            ] } }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWNrIiwicm9sZSI6ImFkbWluIn0.tampered_signature" } ],
+            "url": { "raw": "{{baseUrl}}/api/v1/bookings", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings"] }
+          }
+        },
+        {
+          "name": "TC95 customer calls admin API -> 403",
+          "event": [
+            { "listen": "test", "script": { "exec": [
+              "pm.test('RBAC blocks non-admin (403)', () => { pm.expect(pm.response.code).to.be.oneOf([401,403]); });"
+            ] } }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{customerAccessToken}}" } ],
+            "url": { "raw": "{{baseUrl}}/api/v1/admin/metrics", "host": ["{{baseUrl}}"], "path": ["api","v1","admin","metrics"] }
+          }
+        }
+      ]
+    }
+  ]
+}

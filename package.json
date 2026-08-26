@@ -38,5 +38,9 @@
     "kafkajs": "^2.2.4",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1"
+  },
+  "devDependencies": {
+    "newman": "^6.2.2",
+    "newman-reporter-htmlextra": "^1.23.1"
   }
 }
