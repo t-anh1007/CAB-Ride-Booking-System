@@ -1,0 +1,1 @@
+import{createContext,useContext,useState}from"react";const C=createContext(null);export function DriverRideProvider({children}){const[ride,setRide]=useState(null);return <C.Provider value={{ride,setRide}}>{children}</C.Provider>}export const useDriverRide=()=>useContext(C);

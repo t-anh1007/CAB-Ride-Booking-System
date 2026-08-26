@@ -55,8 +55,8 @@ export const serviceManifests = {
     port: 3106,
     gatewayPath: "/api/v1/reviews",
     protocols: ["REST", "Kafka"],
-    dataStores: ["postgresql"],
-    publishes: [],
+    dataStores: ["mongodb"],
+    publishes: ["ReviewCreated"],
     consumes: []
   },
   "driver-service": {

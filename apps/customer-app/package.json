@@ -1,17 +1,19 @@
 {
   "name": "@cab/customer-app",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5174",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 4174"
+    "preview": "vite preview --host 0.0.0.0 --port 5274"
   },
   "dependencies": {
-    "@vis.gl/react-google-maps": "^1.8.3",
+    "@cab/web-shared": "file:../../packages/web-shared",
+    "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.28.2"
   },
   "devDependencies": {

@@ -1,5 +1,17 @@
 name: cab-booking-local
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Bản tối ưu cho laptop (Docker Desktop):
+#   • Gộp 7 MongoDB -> 1 (mỗi service dùng database riêng trên cùng server)
+#   • Gộp 4 Redis   -> 1 (tách theo key-prefix)
+#   • Giữ 2 Postgres riêng (auth/user) vì có init script riêng
+#   • Cap RAM: WiredTiger cache, Kafka heap, mem_limit mọi container
+#   • Profiles: mặc định = stack nhẹ (không AI). Thêm AI: `--profile ai`
+#
+# Chạy nhẹ (core, không AI):   docker compose -f docker-compose.local.yml up -d
+# Chạy đầy đủ (kèm AI):        docker compose -f docker-compose.local.yml --profile ai up -d
+# ─────────────────────────────────────────────────────────────────────────────
+
 services:
   api-gateway:
     build:
@@ -7,6 +19,7 @@ services:
       dockerfile: gateway/api-gateway/Dockerfile
     image: cab-api-gateway:local
     container_name: cab-api-gateway
+    mem_limit: 256m
     env_file:
       - ../../gateway/api-gateway/.env.docker
     ports:
@@ -14,6 +27,8 @@ services:
     volumes:
       - ../../gateway/api-gateway:/app/gateway/api-gateway
       - /app/gateway/api-gateway/node_modules
+    # depends_on chỉ giữ các core service luôn chạy; service AI (matching/eta/
+    # pricing) được gọi qua HTTP + circuit breaker nên không cần chờ khởi động.
     depends_on:
       auth-service:
         condition: service_started
@@ -23,10 +38,6 @@ services:
         condition: service_started
       user-service:
         condition: service_started
-      pricing-service:
-        condition: service_started
-      matching-service:
-        condition: service_started
       review-service:
         condition: service_started
       driver-service:
@@ -34,8 +45,6 @@ services:
       notification-service:
         condition: service_started
       ride-service:
-        condition: service_started
-      eta-service:
         condition: service_started
     networks:
       - cab-edge
@@ -47,18 +56,19 @@ services:
       dockerfile: services/payment-service/Dockerfile
     image: cab-payment-service:local
     container_name: cab-payment-service
+    mem_limit: 200m
     env_file:
       - ../../services/payment-service/.env.docker
     expose:
       - "3102"
     depends_on:
-      payment-mongodb:
+      mongodb:
         condition: service_started
       kafka:
         condition: service_started
     networks:
       - cab-services
-      - payment-data
+      - cab-data
       - cab-broker
 
   booking-service:
@@ -67,6 +77,7 @@ services:
       dockerfile: services/booking-service/Dockerfile
     image: cab-booking-service:local
     container_name: cab-booking-service
+    mem_limit: 200m
     env_file:
       - ../../services/booking-service/.env.docker
     expose:
@@ -75,15 +86,14 @@ services:
       - ../../services/booking-service:/app/services/booking-service
       - /app/services/booking-service/node_modules
     depends_on:
-      booking-mongodb:
+      mongodb:
         condition: service_started
       kafka:
         condition: service_started
     networks:
       - cab-services
-      - booking-data
+      - cab-data
       - cab-broker
-      - ml-platform-data
 
   auth-service:
     build:
@@ -91,6 +101,7 @@ services:
       dockerfile: services/auth-service/Dockerfile
     image: cab-auth-service:local
     container_name: cab-auth-service
+    mem_limit: 200m
     env_file:
       - ../../services/auth-service/.env.docker
     expose:
@@ -98,13 +109,13 @@ services:
     depends_on:
       auth-postgres:
         condition: service_healthy
-      auth-redis:
+      redis:
         condition: service_started
       kafka:
         condition: service_started
     networks:
       - cab-services
-      - auth-data
+      - cab-data
       - cab-broker
 
   matching-service:
@@ -113,6 +124,8 @@ services:
       dockerfile: AI-ML/matching-service/Dockerfile
     image: cab-matching-service:local
     container_name: cab-matching-service
+    mem_limit: 384m
+    profiles: ["ai"]
     env_file:
       - ../../AI-ML/matching-service/.env.docker
     ports:
@@ -120,18 +133,16 @@ services:
     volumes:
       - cab_ml_model_store:/app/model_store
     depends_on:
-      ml-mongodb:
+      mongodb:
         condition: service_started
-      ml-redis:
+      redis:
         condition: service_started
       kafka:
         condition: service_started
     networks:
       - cab-services
-      - ml-platform-data
+      - cab-data
       - cab-broker
-      - booking-data
-      - driver-data
 
   surge-pricing-service:
     build:
@@ -139,6 +150,8 @@ services:
       dockerfile: AI-ML/surge-pricing-service/Dockerfile
     image: cab-surge-pricing-service:local
     container_name: cab-surge-pricing-service
+    mem_limit: 384m
+    profiles: ["ai"]
     env_file:
       - ../../AI-ML/surge-pricing-service/.env.docker
     expose:
@@ -146,15 +159,15 @@ services:
     volumes:
       - cab_surge_model_store:/app/model_store
     depends_on:
-      ml-mongodb:
+      mongodb:
         condition: service_started
-      ml-redis:
+      redis:
         condition: service_started
       kafka:
         condition: service_started
     networks:
       - cab-services
-      - ml-platform-data
+      - cab-data
       - cab-broker
 
   pricing-service:
@@ -163,6 +176,8 @@ services:
       dockerfile: services/pricing-service/Dockerfile
     image: cab-pricing-service:local
     container_name: cab-pricing-service
+    mem_limit: 200m
+    profiles: ["ai"]
     env_file:
       - ../../services/pricing-service/.env.docker
     expose:
@@ -171,18 +186,15 @@ services:
       - ../../services/pricing-service:/app/services/pricing-service
       - /app/services/pricing-service/node_modules
     depends_on:
-      pricing-mongodb:
+      mongodb:
         condition: service_started
       kafka:
         condition: service_started
-      ml-redis:
-        condition: service_started
-      surge-pricing-service:
+      redis:
         condition: service_started
     networks:
       - cab-services
-      - pricing-data
-      - ml-platform-data   # đọc surge_zone:* keys từ Redis của ML Platform
+      - cab-data
       - cab-broker
 
   user-service:
@@ -191,6 +203,7 @@ services:
       dockerfile: services/user-service/Dockerfile
     image: cab-user-service:local
     container_name: cab-user-service
+    mem_limit: 200m
     env_file:
       - ../../services/user-service/.env.docker
     expose:
@@ -202,7 +215,7 @@ services:
         condition: service_started
     networks:
       - cab-services
-      - user-data
+      - cab-data
       - cab-broker
 
   review-service:
@@ -211,15 +224,21 @@ services:
       dockerfile: services/review-service/Dockerfile
     image: cab-review-service:local
     container_name: cab-review-service
+    mem_limit: 200m
     env_file:
       - ../../services/review-service/.env.docker
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/cab_booking_review
     expose:
       - "3106"
     depends_on:
+      mongodb:
+        condition: service_healthy
       kafka:
         condition: service_started
     networks:
       - cab-services
+      - cab-data
       - cab-broker
 
   driver-service:
@@ -228,22 +247,22 @@ services:
       dockerfile: services/driver-service/Dockerfile
     image: cab-driver-service:local
     container_name: cab-driver-service
+    mem_limit: 200m
     env_file:
       - ../../services/driver-service/.env.docker
     expose:
       - "3107"
     depends_on:
-      driver-mongodb:
-        condition: service_started
+      mongodb:
+        condition: service_healthy
       kafka:
         condition: service_started
-      ml-redis:
+      redis:
         condition: service_started
     networks:
       - cab-services
-      - driver-data
+      - cab-data
       - cab-broker
-      - ml-platform-data   # ghi supply:zone:* keys vào Redis của ML Platform
 
   notification-service:
     build:
@@ -251,18 +270,19 @@ services:
       dockerfile: services/notification-service/Dockerfile
     image: cab-notification-service:local
     container_name: cab-notification-service
+    mem_limit: 200m
     env_file:
       - ../../services/notification-service/.env.docker
     expose:
       - "3108"
     depends_on:
-      notification-mongodb:
+      mongodb:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
     networks:
       - cab-services
-      - notification-data
+      - cab-data
       - cab-broker
 
   ride-service:
@@ -271,16 +291,16 @@ services:
       dockerfile: services/ride-service/Dockerfile
     image: cab-ride-service:local
     container_name: cab-ride-service
+    mem_limit: 200m
     env_file:
       - ../../services/ride-service/.env.docker
     ports:
       - "3109:3109"
+    # eta-service (profile ai) gọi qua HTTP; bỏ khỏi depends_on để chạy core-only.
     depends_on:
-      ride-mongodb:
+      mongodb:
         condition: service_started
-      ride-redis:
-        condition: service_started
-      eta-service:
+      redis:
         condition: service_started
       kafka:
         condition: service_started
@@ -289,7 +309,7 @@ services:
       - /app/services/ride-service/node_modules
     networks:
       - cab-services
-      - ride-data
+      - cab-data
       - cab-broker
 
   eta-service:
@@ -298,44 +318,67 @@ services:
       dockerfile: AI-ML/eta-service/Dockerfile
     image: cab-eta-service:local
     container_name: cab-eta-service
+    mem_limit: 256m
+    profiles: ["ai"]
     env_file:
       - ../../AI-ML/eta-service/.env.docker
     expose:
       - "3110"
     depends_on:
-      eta-redis:
+      redis:
         condition: service_started
       kafka-init:
         condition: service_completed_successfully
     networks:
       - cab-services
-      - eta-data
+      - cab-data
       - cab-broker
 
-  # ── ETA AI Redis (hot-store for ETA cache & driver locations) ──────────────
-  eta-redis:
-    image: redis:7-alpine
-    container_name: cab-eta-redis
-    expose:
-      - "6379"
-    volumes:
-      - cab_eta_redis_data:/data
-    networks:
-      - eta-data
-
-  payment-mongodb:
+  # ── Datastore dùng chung ────────────────────────────────────────────────────
+  # MongoDB gộp: mỗi service dùng database riêng (cab_booking_*, cab_matching_*,
+  # cab_surge_*). Cache WiredTiger cap 0.4GB để không giành hết RAM máy.
+  mongodb:
     image: mongo:7
-    container_name: cab-payment-mongodb
+    container_name: cab-mongodb
+    command: ["mongod", "--wiredTigerCacheSizeGB", "0.4"]
+    mem_limit: 700m
     expose:
       - "27017"
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     volumes:
-      - cab_payment_mongodb_data:/data/db
+      - cab_mongodb_data:/data/db
+      - ../../database_test/booking-seed.js:/docker-entrypoint-initdb.d/booking-seed.js:ro
+      - ../../database_test/driver-seed.js:/docker-entrypoint-initdb.d/driver-seed.js:ro
+      - ../../database_test/pricing-seed.js:/docker-entrypoint-initdb.d/pricing-seed.js:ro
     networks:
-      - payment-data
+      - cab-data
+
+  # Redis gộp: các service tách nhau bằng key-prefix (cab:auth:, surge_zone:, ...)
+  redis:
+    image: redis:7-alpine
+    container_name: cab-redis
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    mem_limit: 160m
+    expose:
+      - "6379"
+    ports:
+      - "6379:6379"
+    volumes:
+      - cab_redis_data:/data
+    networks:
+      - cab-data
 
   auth-postgres:
     image: postgres:16-alpine
     container_name: cab-auth-postgres
+    mem_limit: 200m
     environment:
       POSTGRES_DB: cab_booking_auth
       POSTGRES_USER: postgres
@@ -345,7 +388,6 @@ services:
     volumes:
       - cab_auth_postgres_data:/var/lib/postgresql/data
       - ../../services/auth-service/sql/schema.sql:/docker-entrypoint-initdb.d/001-auth-schema.sql:ro
-    # 002: Đổ dữ liệu mẫu (Cần thêm vào)
       - ../../database_test/auth-seed.sql:/docker-entrypoint-initdb.d/002-auth-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d cab_booking_auth"]
@@ -353,21 +395,12 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - auth-data
-
-  auth-redis:
-    image: redis:7-alpine
-    container_name: cab-auth-redis
-    expose:
-      - "6379"
-    volumes:
-      - cab_auth_redis_data:/data
-    networks:
-      - auth-data
+      - cab-data
 
   user-postgres:
     image: postgres:16-alpine
     container_name: cab-user-postgres
+    mem_limit: 200m
     environment:
       POSTGRES_DB: cab_booking_user
       POSTGRES_USER: postgres
@@ -376,9 +409,7 @@ services:
       - "5432"
     volumes:
       - cab_user_postgres_data:/var/lib/postgresql/data
-      # 1. Tạo bảng trước
       - ../../services/user-service/sql/schema.sql:/docker-entrypoint-initdb.d/001-user-schema.sql:ro
-      # 2. Đổ dữ liệu mẫu sau
       - ../../database_test/user-seed.sql:/docker-entrypoint-initdb.d/002-user-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d cab_booking_user"]
@@ -386,96 +417,12 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - user-data
-
-  pricing-mongodb:
-    image: mongo:7
-    container_name: cab-pricing-mongodb
-    expose:
-      - "27017"
-    volumes:
-      - cab_pricing_mongodb_data:/data/db
-      #đổ dữ liệu vào
-      - ../../database_test/pricing-seed.js:/docker-entrypoint-initdb.d/pricing-seed.js:ro
-    networks:
-      - pricing-data
-
-  ml-mongodb:
-    image: mongo:7
-    container_name: cab-ml-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - cab_ml_mongodb_data:/data/db
-    networks:
-      - ml-platform-data
-
-  ml-redis:
-    image: redis:7-alpine
-    container_name: cab-ml-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - cab_ml_redis_data:/data
-    networks:
-      - ml-platform-data
-      - pricing-data
-
-  booking-mongodb:
-    image: mongo:7
-    container_name: cab-booking-mongodb
-    expose:
-      - "27017"
-    volumes:
-      - cab_booking_mongodb_data:/data/db
-      - ../../database_test/booking-seed.js:/docker-entrypoint-initdb.d/booking-seed.js:ro
-    networks:
-      - booking-data
-
-  driver-mongodb:
-    image: mongo:7
-    container_name: cab-driver-mongodb
-    expose:
-      - "27017"
-    volumes:
-      - cab_driver_mongodb_data:/data/db
-      - ../../database_test/driver-seed.js:/docker-entrypoint-initdb.d/driver-seed.js:ro
-    networks:
-      - driver-data
-
-  notification-mongodb:
-    image: mongo:7
-    container_name: cab-notification-mongodb
-    expose:
-      - "27017"
-    volumes:
-      - cab_notification_mongodb_data:/data/db
-    networks:
-      - notification-data
-
-  ride-mongodb:
-    image: mongo:7
-    container_name: cab-ride-mongodb
-    expose:
-      - "27017"
-    volumes:
-      - cab_ride_mongodb_data:/data/db
-    networks:
-      - ride-data
-
-  ride-redis:
-    image: redis:7-alpine
-    container_name: cab-ride-redis
-    expose:
-      - "6379"
-    volumes:
-      - cab_ride_redis_data:/data
-    networks:
-      - ride-data
+      - cab-data
 
   kafka:
     image: apache/kafka:3.7.0
     container_name: cab-kafka
+    mem_limit: 800m
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
@@ -490,6 +437,8 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Giới hạn heap JVM để tiết kiệm RAM trên laptop
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms256m"
     expose:
       - "9092"
     volumes:
@@ -526,21 +475,31 @@ services:
     networks:
       - cab-broker
 
+  customer-app:
+    profiles: [web]
+    build: { context: ../.., dockerfile: apps/customer-app/Dockerfile }
+    ports: ["5174:80"]
+    mem_limit: 64m
+    networks: [cab-edge]
+  driver-app:
+    profiles: [web]
+    build: { context: ../.., dockerfile: apps/driver-app/Dockerfile }
+    ports: ["5175:80"]
+    mem_limit: 64m
+    networks: [cab-edge]
+  admin-dashboard:
+    profiles: [web]
+    build: { context: ../.., dockerfile: apps/admin-dashboard/Dockerfile }
+    ports: ["5176:80"]
+    mem_limit: 64m
+    networks: [cab-edge]
+
 volumes:
-  cab_payment_mongodb_data:
+  cab_mongodb_data:
+  cab_redis_data:
   cab_auth_postgres_data:
-  cab_auth_redis_data:
   cab_user_postgres_data:
-  cab_booking_mongodb_data:
-  cab_pricing_mongodb_data:
-  cab_driver_mongodb_data:
-  cab_notification_mongodb_data:
-  cab_ride_mongodb_data:
-  cab_ride_redis_data:
-  cab_eta_redis_data:
   cab_kafka_data:
-  cab_ml_mongodb_data:
-  cab_ml_redis_data:
   cab_ml_model_store:
   cab_surge_model_store:
 
@@ -548,13 +507,4 @@ networks:
   cab-edge:
   cab-services:
   cab-broker:
-  payment-data:
-  auth-data:
-  user-data:
-  booking-data:
-  pricing-data:
-  driver-data:
-  notification-data:
-  ride-data:
-  ml-platform-data:
-  eta-data:
+  cab-data:

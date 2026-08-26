@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "node src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "kafkajs": "^2.2.4",
     "express": "^4.21.2",
+    "mongodb": "^6.16.0",
     "uuid": "^13.0.0"
   }
 }

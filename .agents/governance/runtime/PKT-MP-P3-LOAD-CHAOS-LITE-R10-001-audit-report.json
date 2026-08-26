@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "AUD-PKT-MP-P3-LOAD-CHAOS-LITE-R10-001-001",
+  "packet_id": "PKT-MP-P3-LOAD-CHAOS-LITE-R10-001",
+  "auditor_id": "auditor",
+  "candidate_snapshot_sha256": "aba538c8a373730577cf200fee67b337cc46cec0969adea5393106a8f40bc274",
+  "evidence_integrity": "VALID",
+  "drift_detected": false,
+  "findings": [
+    {
+      "id": "AUD-P3-R10-001",
+      "severity": "HIGH",
+      "summary": "The exact frozen candidate fails the authoritative T14 booking performance gate: its full prescribed ramp has p95 1288.68 ms, which is not below 300 ms.",
+      "evidence": [
+        "Independent hashing verified all 19 frozen manifest entries without drift and recomputed snapshot aba538c8a373730577cf200fee67b337cc46cec0969adea5393106a8f40bc274 exactly.",
+        "Independent focused rerun of gateway/api-gateway/test/route-registry.test.js, services/booking-service/test/event-publish.test.js, tests/load/load-contract.test.mjs, and scripts/chaos/chaos-contract.test.mjs passed all 10 tests, including the corrected 250 ms bounded-flush fixture.",
+        "The authoritative runtime summary p3-r10-booking-summary.json records 8095 of 8095 checks passing, HTTP failure rate 0, and p95 1288.6758946 ms; k6 marks the unchanged p(95)<300 threshold as failed. Functional success and zero HTTP failures do not satisfy the independent latency criterion.",
+        "Direct diagnostics support a concurrency bottleneck: 2713 of 2713 Kafka-on requests had p95 1036.15 ms, 3605 of 3605 Kafka-off requests had p95 899.36 ms, while the one-VU baseline had p95 25.72 ms. These measurements locate saturation in the concurrent booking ingest path but do not by themselves prove a single exclusive cause.",
+        "The diagnostic-only deferred-drain clone is not part of the frozen candidate and cannot receive acceptance credit. Its retained evidence shows 3571 of 3571 successful requests and p95 943.69 ms, while the validated Worker handoff records exactly 3571 durable outbox rows; deferring drain alone therefore did not approach the T14 limit.",
+        "A successor may remove the unconditional idempotency pre-read for new bookings and rely on the existing unique idempotencyKey index with E11000 duplicate-key fallback to fetch and return the winning booking. It must prove sequential and concurrent duplicates produce one booking identity and one event, and must cover quote-consumption behavior on duplicate races.",
+        "Bounded asynchronous Kafka dispatch with exact outbox persistence on send failure is a plausible latency experiment only with explicit queue bounds, healthy-path batching, coalesced non-overlapping drains, and a durable overflow/failure fallback. Returning before either Kafka acknowledgement or outbox persistence creates a process-crash window in which an accepted booking can lose ride.created; that tradeoff conflicts with this packet's outbox-first-before-return criterion unless the Coordinator explicitly revises acceptance or the successor closes the window with durable state before response.",
+        "Successor verification must explicitly cover idempotency races, exactly preserved event payloads, Kafka timeout and outage persistence, replay and at-least-once behavior, queue saturation, process termination in the pre-persistence crash window, and the full prescribed booking ramp with p95 below 300 ms and failures below 5 percent. Live scenarios 71 and 73, ETA, and pricing remain required after the redesign."
+      ]
+    }
+  ],
+  "verdict": "FAIL",
+  "created_at": "2026-08-26T01:06:15.277Z"
+}

@@ -48,8 +48,8 @@ export const topology = {
   resilience: resilienceTopology,
   security: securityTopology,
   dataLayer: {
-    postgresql: ["pricing-service", "payment-service", "auth-service", "user-service", "review-service", "driver-service"],
-    mongodb: ["booking-service", "notification-service", "ride-service"],
+    postgresql: ["pricing-service", "payment-service", "auth-service", "user-service", "driver-service"],
+    mongodb: ["booking-service", "review-service", "notification-service", "ride-service"],
     redis: ["driver-service", "ride-service"]
   },
   broker: brokerTopology

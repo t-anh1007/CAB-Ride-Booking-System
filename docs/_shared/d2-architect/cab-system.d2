@@ -1,0 +1,73 @@
+direction: right
+
+Customer: Khách hàng { shape: person; style.fill: "#E6F4EA" }
+Driver: Tài xế { shape: person; style.fill: "#E8F0FE" }
+Admin: Quản trị viên { shape: person; style.fill: "#FFF4E5" }
+
+Clients: Ứng dụng CAB {
+  CustomerApp: Customer App
+  DriverApp: Driver App
+  AdminApp: Admin Dashboard
+  SharedUI: Web Shared UI và bản đồ
+}
+
+Platform: Nền tảng dịch vụ {
+  Gateway: API Gateway
+  Auth: Auth Service
+  User: User Service
+  Booking: Booking Service
+  DriverSvc: Driver Service
+  Ride: Ride Service
+  Payment: Payment Service
+  Pricing: Pricing Service
+  Review: Review Service
+  Notification: Notification Service
+}
+
+AI: Dịch vụ AI và dữ liệu thời gian thực {
+  Matching: Matching Service
+  ETA: ETA Service
+  Surge: Surge Pricing Service
+}
+
+Data: Hạ tầng dữ liệu {
+  Mongo: MongoDB { shape: cylinder; style.fill: "#E6F4EA" }
+  Postgres: PostgreSQL { shape: cylinder; style.fill: "#E8F0FE" }
+  Redis: Redis { shape: cylinder; style.fill: "#FFF4E5" }
+  Kafka: Kafka { shape: queue; style.fill: "#FCE8E6" }
+}
+
+External: Dịch vụ ngoài {
+  style.stroke-dash: 3
+  OSM: OpenStreetMap và Nominatim
+  OSRM: OSRM định tuyến
+}
+
+Customer -> Clients.CustomerApp: đặt xe và theo dõi chuyến
+Driver -> Clients.DriverApp: nhận chuyến và cập nhật vị trí
+Admin -> Clients.AdminApp: vận hành và kiểm toán
+Clients.CustomerApp -> Clients.SharedUI: dùng thành phần chung
+Clients.DriverApp -> Clients.SharedUI: dùng thành phần chung
+Clients.AdminApp -> Clients.SharedUI: dùng thành phần chung
+Clients -> Platform.Gateway: REST và realtime
+Platform.Gateway -> Platform.Auth: xác thực và phân quyền
+Platform.Gateway -> Platform.User: hồ sơ người dùng
+Platform.Gateway -> Platform.Booking: đặt chuyến
+Platform.Gateway -> Platform.DriverSvc: trạng thái tài xế
+Platform.Gateway -> Platform.Ride: vòng đời chuyến
+Platform.Gateway -> Platform.Payment: thanh toán
+Platform.Gateway -> Platform.Pricing: báo giá
+Platform.Gateway -> Platform.Review: đánh giá
+Platform.Booking -> AI.Matching: chọn tài xế phù hợp
+Platform.Ride -> AI.ETA: ước tính thời gian đến
+Platform.Pricing -> AI.Surge: tính hệ số cung cầu
+Platform -> Data.Mongo: dữ liệu nghiệp vụ
+Platform.Auth -> Data.Postgres: tài khoản và phiên
+Platform.User -> Data.Postgres: hồ sơ và ví
+Platform -> Data.Redis: cache và vị trí
+Platform -> Data.Kafka: phát và nhận sự kiện
+AI -> Data.Mongo: đặc trưng và lịch sử
+AI -> Data.Redis: dữ liệu nóng
+AI -> Data.Kafka: sự kiện dự đoán
+Clients.SharedUI -> External.OSM: bản đồ và tìm địa điểm
+Platform.Ride -> External.OSRM: tuyến đường

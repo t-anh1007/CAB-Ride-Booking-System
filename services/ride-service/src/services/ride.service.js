@@ -613,6 +613,7 @@ async function clearAllRides() {
 export default {
   createRide,
   getRideById,
+  assignDriver,
   getRidesByUserId,
   getRidesByDriverId,
   acceptRide,
@@ -628,6 +629,7 @@ export default {
 export {
     createRide,
     getRideById,
+    assignDriver,
     getRidesByUserId,
     getRidesByDriverId,
     acceptRide,

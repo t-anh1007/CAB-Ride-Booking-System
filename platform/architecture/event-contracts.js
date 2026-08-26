@@ -10,6 +10,10 @@ export const brokerTopology = {
       topic: "ride.created",
       producer: "booking-service"
     },
+    ReviewCreated: {
+      topic: "review.created",
+      producer: "review-service"
+    },
     DriverAssigned: {
       topic: "driver.assigned",
       producer: "driver-service"

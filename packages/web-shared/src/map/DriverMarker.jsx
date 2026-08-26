@@ -1,0 +1,1 @@
+import L from"leaflet";import{Marker}from"react-leaflet";export function DriverMarker({position,heading=0}){const icon=L.divIcon({className:"cab-map-marker",html:"<span class='cab-map-marker__driver' style='transform:rotate("+heading+"deg)' aria-label='Vị trí tài xế'>➤</span>",iconSize:[34,34],iconAnchor:[17,17]});return position?<Marker position={position} icon={icon}/>:null}

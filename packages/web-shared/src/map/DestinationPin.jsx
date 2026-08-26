@@ -1,0 +1,6 @@
+import L from "leaflet";
+import { Marker } from "react-leaflet";
+
+const icon = L.divIcon({ className: "cab-map-marker", html: "<span class='cab-map-marker__pin cab-map-marker__pin--destination' aria-label='Điểm đến'>●</span>", iconSize: [32, 42], iconAnchor: [16, 38] });
+
+export function DestinationPin({ position }) { return position ? <Marker position={position} icon={icon} /> : null; }

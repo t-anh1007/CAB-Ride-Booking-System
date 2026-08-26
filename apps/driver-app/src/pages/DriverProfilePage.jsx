@@ -1,0 +1,1 @@
+import{useAuth}from"../providers/AuthProvider.jsx";export default function DriverProfilePage(){const{user,logout}=useAuth();return <main className="page"><h1>Hồ sơ tài xế</h1><div className="card"><p>{user?.name||user?.phone||user?.destination||"Đối tác CAB"}</p><button className="danger" onClick={logout}>Đăng xuất</button></div></main>}

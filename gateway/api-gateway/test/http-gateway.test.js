@@ -391,7 +391,7 @@ test("auth lifecycle routes remain public and proxy to auth-service", async (t) 
   assert.equal(auth.meCalls.length, 0);
 });
 
-test("auth endpoints are rate limited at five requests per minute", async (t) => {
+test("auth endpoints are rate limited at 100 requests per minute", async (t) => {
   const auth = await createAuthServer();
   const runtime = await createGatewayApp({
     env: createEnv({
@@ -404,7 +404,7 @@ test("auth endpoints are rate limited at five requests per minute", async (t) =>
     await auth.close();
   });
 
-  for (let attempt = 1; attempt <= 5; attempt += 1) {
+  for (let attempt = 1; attempt <= 100; attempt += 1) {
     await request(runtime.app)
       .post("/api/v1/auth/login/otp/request")
       .send({
@@ -422,6 +422,12 @@ test("auth endpoints are rate limited at five requests per minute", async (t) =>
     })
     .expect(429);
 
+  assert.equal(blocked.body.success, false);
+  assert.equal(typeof blocked.body.data.retryAfterSeconds, "number");
+  assert.ok(blocked.body.data.retryAfterSeconds > 0);
+  assert.ok(blocked.body.meta.requestId);
+  assert.ok(blocked.body.meta.correlationId);
+  assert.ok(blocked.body.meta.timestamp);
   assert.equal(blocked.body.message, "Rate limit exceeded");
   assert.ok(blocked.headers["retry-after"]);
 });

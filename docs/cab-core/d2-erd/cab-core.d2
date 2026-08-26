@@ -1,0 +1,90 @@
+direction: right
+
+AUTH_ACCOUNT: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  phone: "string (unique)"
+  status: "active | locked | disabled"
+  createdAt: datetime
+}
+
+USER: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  authAccountId: string
+  fullName: string
+  role: "customer | driver | admin"
+  createdAt: datetime
+}
+
+DRIVER: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  userId: string
+  status: "offline | available | busy"
+  rating: number
+  currentLocation: geo
+}
+
+BOOKING: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  customerId: string
+  driverId: "string (nullable)"
+  pickup: geo
+  destination: geo
+  vehicleType: string
+  quotedFare: money
+  status: "searching | assigned | cancelled | completed"
+}
+
+RIDE: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  bookingId: string
+  driverId: string
+  status: "assigned | arriving | in_progress | completed | cancelled"
+  startedAt: "datetime (nullable)"
+  completedAt: "datetime (nullable)"
+}
+
+PAYMENT: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  bookingId: string
+  customerId: string
+  amount: money
+  status: "pending | completed | failed | refunded"
+  idempotencyKey: string
+}
+
+REVIEW: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  rideId: string
+  reviewerId: string
+  subjectId: string
+  rating: int
+  comment: "string (nullable)"
+}
+
+NOTIFICATION: {
+  shape: sql_table
+  id: string { constraint: primary_key }
+  recipientId: string
+  eventType: string
+  status: "queued | delivered | failed"
+  createdAt: datetime
+}
+
+AUTH_ACCOUNT.id -> USER.authAccountId: định danh
+USER.id -> DRIVER.userId: mở hồ sơ tài xế
+USER.id -> BOOKING.customerId: đặt chuyến
+DRIVER.id -> BOOKING.driverId: được gán
+BOOKING.id -> RIDE.bookingId: tạo chuyến
+DRIVER.id -> RIDE.driverId: thực hiện
+BOOKING.id -> PAYMENT.bookingId: thanh toán
+USER.id -> PAYMENT.customerId: chi trả
+RIDE.id -> REVIEW.rideId: được đánh giá
+USER.id -> REVIEW.reviewerId: gửi đánh giá
+USER.id -> NOTIFICATION.recipientId: nhận thông báo

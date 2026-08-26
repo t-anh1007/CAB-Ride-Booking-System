@@ -4,6 +4,7 @@
   "type": "module",
   "workspaces": [
     "apps/*",
+    "packages/*",
     "gateway/*",
     "services/*",
     "AI-ML/*"
@@ -27,9 +28,15 @@
     "inspect:ai": "node ./platform/architecture/print-ai-topology.js",
     "inspect:realtime": "node ./platform/architecture/print-realtime-topology.js",
     "inspect:security": "node ./platform/architecture/print-security-topology.js",
-    "inspect:resilience": "node ./platform/architecture/print-resilience-topology.js"
+    "inspect:resilience": "node ./platform/architecture/print-resilience-topology.js",
+    "governance": "node ./.agents/governance/scripts/governance-cli.mjs",
+    "smoke": "node ./scripts/smoke.mjs",
+    "test:all": "npm test --workspace @cab/api-gateway && npm test --workspace @cab/auth-service && npm test --workspace @cab/booking-service && npm test --workspace @cab/payment-service && npm test --workspace @cab/ride-service && npm test --workspace @cab/pricing-service && npm test --workspace @cab/driver-service && npm test --workspace @cab/user-service && npm test --workspace @cab/review-service && node --test ./services/notification-service/test/notification-service.test.js ./AI-ML/eta-service/test/*.test.js && npm run test:governance && cd AI-ML/matching-service && python -m pytest app/tests -q && cd ../ai-insights-service && python -m pytest app/tests -q && cd ../surge-pricing-service && python -m pytest app/tests -q",
+    "test:governance": "node --test ./.agents/governance/test/governance-cli.test.mjs"
   },
   "dependencies": {
-    "kafkajs": "^2.2.4"
+    "kafkajs": "^2.2.4",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1"
   }
 }
