@@ -1,5 +1,7 @@
 # Frontend Rebuild Implementation Plan (Sub-plan 2/2)
 
+> **Status: SUPERSEDED on 2026-08-26.** Do not execute this plan. It describes the already-created connected frontend baseline and contains destructive scaffold steps such as deleting app `src` trees. The CAB visual replacement is governed by `docs/superpowers/specs/2026-08-26-cab-unified-ui-design.md` and `docs/superpowers/plans/2026-08-26-cab-unified-ui-implementation.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Đập đi xây lại 3 frontend app (Customer, Driver, Admin) theo đúng danh sách màn hình PDF (C1–C11, Driver 7 màn, Admin 6 module), thay Google Maps bằng **Leaflet + OpenStreetMap**, nối gateway API + realtime WebSocket.
