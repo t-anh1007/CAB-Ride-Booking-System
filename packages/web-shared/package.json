@@ -10,6 +10,7 @@
     "react-leaflet": "^4.2.1"
   },
   "exports": {
-    ".": "./src/index.js"
+    ".": "./src/index.js",
+    "./ui.css": "./src/ui/tokens.css"
   }
 }

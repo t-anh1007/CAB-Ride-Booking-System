@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "AUD-PKT-MP-P3-LOAD-CHAOS-LITE-R11-001-001",
+  "packet_id": "PKT-MP-P3-LOAD-CHAOS-LITE-R11-001",
+  "auditor_id": "auditor",
+  "candidate_snapshot_sha256": "a5c512c0eeed8217abf7837402c11ec14d54a1c76b2283dcef4a97204dda21c6",
+  "evidence_integrity": "VALID",
+  "drift_detected": false,
+  "findings": [
+    {
+      "id": "AUD-P3-R11-T14-001",
+      "severity": "HIGH",
+      "summary": "The exact frozen candidate fails the authoritative T14 booking latency gate: the prescribed booking ramp measured p95 679.91 ms, which is not below 300 ms.",
+      "evidence": [
+        "Independent hashing verified all 21 frozen manifest entries without drift and recomputed snapshot a5c512c0eeed8217abf7837402c11ec14d54a1c76b2283dcef4a97204dda21c6 exactly.",
+        "Independent focused verification passed 19 of 19 candidate project tests and the isolated broker candidate harness passed 5 of 5, for 24 of 24 focused checks in total. These establish functional correctness of the scoped idempotency, dispatcher, gateway load-mode, load-contract, and chaos-contract behavior but do not satisfy the live latency gate.",
+        "The authoritative runtime summary records 13424 of 13424 checks passing, HTTP failure rate 0, and p95 679.91277525 ms; k6 marks the unchanged p(95)<300 threshold as failed. Functional success and zero failures cannot override the independent latency criterion.",
+        "The direct booking-service diagnostic records 5418 of 5418 checks passing with p95 559.46366865 ms, so gateway overhead is not the primary bottleneck.",
+        "The fresh isolated Mongo and booking-service diagnostic records 3911 of 3911 checks passing with p95 707.965143 ms. Together with the documented zero starting documents and equivalent indexes, this rules out accumulated booking data as the explanation for the failed gate.",
+        "The candidate correctly scopes E11000 fallback to the idempotencyKey unique index and the reviewed dispatcher has bounded queue capacity, non-overlapping drains, durable overflow/failure spill, and replay coverage. No additional HIGH or CRITICAL correctness or security defect was found in the frozen delta.",
+        "A successor raw Booking.collection.insertOne fast path is a reasonable bounded experiment only if it fully materializes the Booking document and preserves schema behavior that raw collection writes bypass: UUID bookingId, userId fallback, REQUESTED status, vehicle and payment enums, nested pickup/drop and numeric validation, distance calculation, quote and locked-price semantics, priceSnapshot defaults, null defaults, createdAt and updatedAt Date values, and response/event serialization aliases and types.",
+        "The successor must treat only idempotencyKey-specific E11000 as a duplicate, fetch and return the winning record with HTTP 200, never publish a second event, propagate unrelated unique-index errors, include the inserted _id and schema-compatible __v/default fields where response parity requires them, and prove sequential/concurrent duplicate, validation/default/timestamp/serialization, quote-consumption, and event-payload parity before repeating the full live ramp.",
+        "The save-first response path still has a process-crash window between booking persistence and durable publication. Documentation must not describe this as transactional outbox semantics, and later acceptance must retain this residual durability limitation unless a successor closes it."
+      ]
+    }
+  ],
+  "verdict": "FAIL",
+  "created_at": "2026-08-26T03:44:23.682Z"
+}

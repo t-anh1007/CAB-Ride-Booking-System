@@ -1,0 +1,57 @@
+direction: down
+
+Customer: Khách hàng {
+  start: Mở ứng dụng { shape: circle; style.fill: "#E8F0FE" }
+  destination: Chọn điểm đón và điểm đến
+  option: Chọn loại xe và xác nhận giá
+  cancel: Hủy yêu cầu
+  track: Theo dõi tài xế và chuyến đi
+  rate: Thanh toán và đánh giá
+  end: Hoàn tất { shape: circle; style.fill: "#E6F4EA" }
+}
+
+System: Hệ thống CAB {
+  quote: Tính quãng đường ETA và giá
+  create: Tạo booking có khóa chống gửi lặp
+  match: Tìm tài xế phù hợp
+  found: Tìm thấy tài xế? { shape: diamond; style.fill: "#FFF4E5" }
+  notify: Gửi yêu cầu chuyến cho tài xế
+  accepted: Tài xế chấp nhận? { shape: diamond; style.fill: "#FFF4E5" }
+  activate: Gán tài xế và mở ride
+  update: Đồng bộ vị trí và trạng thái realtime
+  settle: Ghi nhận thanh toán và sự kiện hoàn tất
+  expire: Hết thời gian hoặc không còn ứng viên
+}
+
+Driver: Tài xế {
+  receive: Nhận yêu cầu chuyến
+  decide: Xem lộ trình và thu nhập dự kiến
+  reject: Từ chối yêu cầu
+  pickup: Di chuyển đến điểm đón
+  complete: Đón khách và hoàn thành chuyến
+}
+
+Customer.start -> Customer.destination
+Customer.destination -> System.quote
+System.quote -> Customer.option
+Customer.option -> System.create
+System.create -> System.match
+System.match -> System.found
+System.found -> System.notify: Có
+System.found -> System.expire: Không
+System.expire -> Customer.cancel
+System.notify -> Driver.receive
+Driver.receive -> Driver.decide
+Driver.decide -> System.accepted
+System.accepted -> Driver.reject: Không
+Driver.reject -> System.match: thử tài xế tiếp theo
+System.accepted -> System.activate: Có
+System.activate -> Driver.pickup
+System.activate -> Customer.track
+Driver.pickup -> System.update
+System.update -> Customer.track
+Driver.pickup -> Driver.complete
+Driver.complete -> System.settle
+System.settle -> Customer.rate
+Customer.rate -> Customer.end
+Customer.cancel -> Customer.end

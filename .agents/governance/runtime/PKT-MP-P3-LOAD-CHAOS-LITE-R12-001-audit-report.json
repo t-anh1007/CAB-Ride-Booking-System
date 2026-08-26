@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "id": "AUD-PKT-MP-P3-LOAD-CHAOS-LITE-R12-001-001",
+  "packet_id": "PKT-MP-P3-LOAD-CHAOS-LITE-R12-001",
+  "auditor_id": "auditor",
+  "candidate_snapshot_sha256": "99226ed374ebe03db2adf49c21a80eee2d2d293047658a9191514e44f43a09d0",
+  "evidence_integrity": "VALID",
+  "drift_detected": false,
+  "findings": [
+    {
+      "id": "AUD-P3-R12-T14-001",
+      "severity": "HIGH",
+      "summary": "The raw single-insert direction is insufficient for T14: the fresh direct 100-VU prototype measured p95 603.15 ms, failing the strict below-300-ms booking latency gate.",
+      "evidence": [
+        "Independent byte hashing verified all 22 frozen manifest paths against both the candidate and R12 baseline, and recomputed snapshot 99226ed374ebe03db2adf49c21a80eee2d2d293047658a9191514e44f43a09d0 exactly; the frozen candidate is baseline-identical with no project-byte drift.",
+        "Independent prototype verification with the required Node module-mock flag passed 14 of 14 tests covering raw materialization and hydration, validation and defaults, quote semantics, sequential and concurrent idempotency races, unrelated E11000 propagation, event parity, bounded dispatcher overflow/failure/replay, and close drain.",
+        "The retained fresh direct summary records 5218 of 5218 checks passing, 100 percent check success, zero HTTP failures, and p95 603.150125 ms at 100 VUs. Functional success and zero failures do not satisfy the authoritative p95 below 300 ms criterion.",
+        "The raw insert experiment improved the matched fresh-database R11 direct p95 from 707.96 ms to 603.15 ms, about 15 percent, but remained more than twice the gate; rejecting the ignored prototype before any project-byte write was therefore correct.",
+        "The current frozen candidate intentionally contains no raw-insert implementation and cannot satisfy T14; the full authenticated gateway ramp, ETA, pricing, chaos 71 and 73, tracked summaries, README, and RUNBOOK acceptance work remains pending.",
+        "A bounded acknowledged insertMany micro-batch is a reasonable successor experiment only if every request completes after its containing batch is acknowledged, successful and failed items are mapped deterministically from BulkWriteError indexes, and partial-batch success cannot misattribute a result or publish an event for a failed item.",
+        "The successor must convert only an idempotencyKey-specific E11000 into a fetch of the winning record and HTTP 200, propagate unrelated errors, publish exactly one event per successful winner, preserve schema/default/quote/response parity, and retain acknowledged write concern without weakening journaling or durability.",
+        "The micro-batch queue must enforce bounded batch size, bounded wait, bounded total capacity with explicit backpressure, and shutdown flush or deterministic rejection; focused tests must cover timer and size flushes, mixed partial success, ordered or unordered BulkWriteError index mapping, concurrent duplicates across and within batches, unrelated failures, capacity, close drain, and event uniqueness before the authoritative live ramp is repeated."
+      ]
+    }
+  ],
+  "verdict": "FAIL",
+  "created_at": "2026-08-26T04:00:34.158Z"
+}
