@@ -42,6 +42,14 @@ function resolveDropLocation(payload) {
     return payload.drop || payload.destination || null;
 }
 
+function isIdempotencyDuplicate(error, idempotencyKey) {
+    if (error?.code !== 11000) return false;
+    return error?.keyPattern?.idempotencyKey === 1
+        || Object.prototype.hasOwnProperty.call(error?.keyValue || {}, 'idempotencyKey')
+        || (String(error?.message || '').includes('idempotencyKey_1')
+            && String(error.message).includes(String(idempotencyKey)));
+}
+
 function calculateDistanceKm(origin, destination) {
     const toRadians = (value) => (value * Math.PI) / 180;
     const earthRadiusKm = 6371;
@@ -66,12 +74,6 @@ export const createBooking = async (req, res) => {
         // [TC19] Kiểm tra header Idempotency
         if (!idempotencyKey) {
             return res.status(400).json({ success: false, message: 'Missing Idempotency-Key header' });
-        }
-
-        // [TC19] Xử lý trùng lặp request
-        let existingBooking = await Booking.findOne({ idempotencyKey });
-        if (existingBooking) {
-            return res.status(200).json(formatResponse("Booking already exists", serializeBooking(existingBooking), req));
         }
 
         const { userId, pickup, distanceKm, vehicleType, paymentMethod, quoteId } = req.body;
@@ -148,7 +150,14 @@ export const createBooking = async (req, res) => {
             Pickup: ${newBooking.pickup.address} (${newBooking.pickup.lat}, ${newBooking.pickup.lng})
             Drop: ${newBooking.drop.address} (${newBooking.drop.lat}, ${newBooking.drop.lng})`);
         
-        await newBooking.save();
+        try {
+            await newBooking.save();
+        } catch (error) {
+            if (!isIdempotencyDuplicate(error, idempotencyKey)) throw error;
+            const existingBooking = await Booking.findOne({ idempotencyKey });
+            if (!existingBooking) throw error;
+            return res.status(200).json(formatResponse("Booking already exists", serializeBooking(existingBooking), req));
+        }
 
         // Publish đúng contract kiến trúc để matching/ETA consume ổn định.
         await messageBroker.publish('ride.created', {
@@ -178,12 +187,16 @@ export const createBooking = async (req, res) => {
 export const getUserBookings = async (req, res) => {
     try {
         const userId = req.query.user_id;
+        const requestedLimit = Number.parseInt(req.query.limit, 10);
+        const limit = Number.isInteger(requestedLimit)
+            ? Math.min(Math.max(requestedLimit, 1), 100)
+            : 50;
 
         if (!userId) {
             return res.status(400).json({ success: false, message: 'Missing user_id parameter' });
         }
 
-        const bookings = await Booking.find({ userId }).sort({ createdAt: -1 });
+        const bookings = await Booking.find({ userId }).sort({ createdAt: -1 }).limit(limit);
         res.status(200).json(formatResponse("Retrieved user bookings", bookings.map(serializeBooking), req));
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

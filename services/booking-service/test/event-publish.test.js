@@ -68,87 +68,206 @@ test('[TC25] successful booking publishes the complete ride.created contract', a
   assert.equal(new Date(event.payload.timestamp).toISOString(), fixedCreatedAt.toISOString());
 });
 
-test('[TC38, TC73] Kafka failure persists and replays one durable outbox record', async () => {
-  assert.equal(
-    typeof brokerModule.MessageBroker,
-    'function',
-    'MessageBroker must expose an injectable implementation for durable outbox recovery'
-  );
-
+function createOutbox() {
   const records = [];
   let nextId = 1;
-  const outboxCollection = {
-    async createIndex() {},
-    async insertOne(record) {
-      const persisted = { _id: `outbox-${nextId}`, ...record };
-      nextId += 1;
-      records.push(persisted);
-      return { acknowledged: true, insertedId: persisted._id };
-    },
-    find() {
-      return {
-        sort() {
-          return { toArray: async () => records.map((record) => ({ ...record })) };
+  const persist = (record) => {
+    const value = { _id: `outbox-${nextId++}`, ...structuredClone(record) };
+    records.push(value);
+    return value;
+  };
+  return {
+    records,
+    collection: {
+      async insertOne(record) {
+        const value = persist(record);
+        return { acknowledged: true, insertedId: value._id };
+      },
+      async insertMany(values) {
+        values.forEach(persist);
+        return { acknowledged: true, insertedCount: values.length };
+      },
+      find() {
+        let limit = Infinity;
+        const cursor = {
+          sort() { return cursor; },
+          limit(value) { limit = value; return cursor; },
+          async toArray() { return records.slice(0, limit).map((record) => structuredClone(record)); }
+        };
+        return cursor;
+      },
+      async deleteMany({ _id: { $in } }) {
+        const before = records.length;
+        for (let index = records.length - 1; index >= 0; index -= 1) {
+          if ($in.includes(records[index]._id)) records.splice(index, 1);
         }
-      };
-    },
-    async deleteOne({ _id }) {
-      const index = records.findIndex((record) => record._id === _id);
-      if (index === -1) return { deletedCount: 0 };
-      records.splice(index, 1);
-      return { deletedCount: 1 };
+        return { deletedCount: before - records.length };
+      },
+      async deleteOne({ _id }) {
+        const index = records.findIndex((record) => record._id === _id);
+        if (index < 0) return { deletedCount: 0 };
+        records.splice(index, 1);
+        return { deletedCount: 1 };
+      }
     }
   };
+}
+
+test("[TC73] slow Kafka is removed from request-path latency", async () => {
+  const outbox = createOutbox();
   const sends = [];
-  let kafkaAvailable = false;
-  const producer = {
-    async connect() {},
-    async disconnect() {},
-    async send(batch) {
-      if (!kafkaAvailable) throw new Error('Kafka unavailable');
-      sends.push(batch);
-    }
-  };
   const broker = new brokerModule.MessageBroker({
-    producer,
-    outboxCollection,
-    now: () => '2026-08-25T00:00:00.000Z',
-    autoReplay: false
+    outboxCollection: outbox.collection,
+    dispatchDelayMs: 60_000,
+    producer: {
+      async send(batch) { await new Promise((resolve) => setTimeout(resolve, 250)); sends.push(batch); },
+      async disconnect() {}
+    }
   });
-  const payload = {
-    type: 'RideCreated',
-    bookingId: 'BKG-OUTBOX-1',
-    rideId: 'BKG-OUTBOX-1',
-    pickup: { lat: 10.77, lng: 106.7 },
-    timestamp: '2026-08-25T00:00:00.000Z'
-  };
-
-  const buffered = await broker.publish('ride.created', payload);
-
-  assert.deepEqual(buffered, { published: false, buffered: true });
-  assert.equal(records.length, 1);
-  assert.deepEqual(
-    { topic: records[0].topic, payload: records[0].payload, createdAt: records[0].createdAt },
-    { topic: 'ride.created', payload, createdAt: '2026-08-25T00:00:00.000Z' }
-  );
-
-  const failedFlush = await broker.flushOutbox();
-  assert.equal(failedFlush.published, 0);
-  assert.equal(records.length, 1, 'failed replay must retain the durable record');
-
-  kafkaAvailable = true;
-  const successfulFlush = await broker.flushOutbox();
-  assert.equal(successfulFlush.published, 1);
-  assert.equal(records.length, 0, 'only the successfully published record is removed');
+  const payload = { eventId: "evt-slow", bookingId: "BKG-SLOW" };
+  const startedAt = performance.now();
+  const result = broker.publish("ride.created", payload);
+  const elapsedMs = performance.now() - startedAt;
+  assert.ok(elapsedMs < 20, `enqueue took ${elapsedMs.toFixed(1)}ms`);
+  assert.deepEqual(result, { published: false, buffered: false, queued: true });
+  assert.equal(outbox.records.length, 0);
+  assert.deepEqual(await broker.drainQueue(), { published: 1, buffered: 0 });
   assert.equal(sends.length, 1);
-  assert.equal(sends[0].topic, 'ride.created');
   assert.deepEqual(JSON.parse(sends[0].messages[0].value), payload);
   await broker.close();
 });
 
+test("[TC68, TC73] topic batches share one non-overlapping drain", async () => {
+  const outbox = createOutbox();
+  const sends = [];
+  let active = 0;
+  let maxActive = 0;
+  const broker = new brokerModule.MessageBroker({
+    outboxCollection: outbox.collection,
+    dispatchDelayMs: 60_000,
+    producer: {
+      async send(batch) {
+        active += 1;
+        maxActive = Math.max(maxActive, active);
+        sends.push(batch);
+        await new Promise((resolve) => setImmediate(resolve));
+        active -= 1;
+      },
+      async disconnect() {}
+    }
+  });
+  broker.publish("ride.created", { bookingId: "BKG-1" });
+  broker.publish("ride.created", { bookingId: "BKG-2" });
+  broker.publish("ride.cancelled", { bookingId: "BKG-3" });
+  const first = broker.drainQueue();
+  const second = broker.drainQueue();
+  const [firstResult, secondResult] = await Promise.all([first, second]);
+  assert.deepEqual(secondResult, firstResult);
+  assert.deepEqual(firstResult, { published: 3, buffered: 0 });
+  assert.equal(maxActive, 1);
+  assert.deepEqual(sends.map((batch) => [batch.topic, batch.messages.length]), [
+    ["ride.created", 2],
+    ["ride.cancelled", 1]
+  ]);
+  await broker.close();
+});
 
-test('[TC38, TC73] failed startup connection still schedules automatic outbox recovery', async () => {
-  const records = [];
+test("[TC73] queue overflow durably backpressures instead of dropping", async () => {
+  const outbox = createOutbox();
+  const sends = [];
+  let releaseSend;
+  const broker = new brokerModule.MessageBroker({
+    outboxCollection: outbox.collection,
+    dispatchCapacity: 1,
+    dispatchDelayMs: 60_000,
+    producer: {
+      async send(batch) {
+        sends.push(batch);
+        await new Promise((resolve) => { releaseSend = resolve; });
+      },
+      async disconnect() {}
+    }
+  });
+  assert.deepEqual(broker.publish("ride.created", { eventId: "evt-queued", bookingId: "BKG-QUEUED" }), {
+    published: false, buffered: false, queued: true
+  });
+  const drain = broker.drainQueue();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(broker.inFlightCount, 1, "capacity must include the batch currently in flight");
+  const overflow = await broker.publish("ride.created", { eventId: "evt-overflow", bookingId: "BKG-OVERFLOW" });
+  assert.deepEqual(overflow, { published: false, buffered: true, queued: false });
+  assert.equal(outbox.records.length, 1);
+  assert.equal(outbox.records[0].payload.eventId, "evt-overflow");
+  releaseSend();
+  await drain;
+  assert.equal(sends.length, 1);
+  assert.equal(JSON.parse(sends[0].messages[0].value).eventId, "evt-queued");
+  await broker.close();
+});
+
+test("[TC38, TC73] Kafka failure spills exact batches, opens circuit, and replays later", async () => {
+  const outbox = createOutbox();
+  let nowMs = 1000;
+  let available = false;
+  let attempts = 0;
+  const successful = [];
+  const broker = new brokerModule.MessageBroker({
+    outboxCollection: outbox.collection,
+    clock: () => nowMs,
+    circuitOpenMs: 2000,
+    dispatchDelayMs: 60_000,
+    producer: {
+      async send(batch) {
+        attempts += 1;
+        if (!available) throw new Error("Kafka unavailable");
+        successful.push(batch);
+      },
+      async disconnect() {}
+    }
+  });
+  broker.publish("ride.created", { eventId: "evt-a", bookingId: "BKG-A" });
+  broker.publish("ride.created", { eventId: "evt-b", bookingId: "BKG-B" });
+  assert.deepEqual(await broker.drainQueue(), { published: 0, buffered: 2 });
+  assert.equal(attempts, 1);
+  assert.deepEqual(outbox.records.map((record) => record.payload.eventId), ["evt-a", "evt-b"]);
+
+  const duringCircuit = await broker.publish("ride.created", { eventId: "evt-c", bookingId: "BKG-C" });
+  assert.deepEqual(duringCircuit, { published: false, buffered: true, queued: false });
+  assert.equal(attempts, 1, "open circuit must not retry Kafka");
+  assert.deepEqual(outbox.records.map((record) => record.payload.eventId), ["evt-a", "evt-b", "evt-c"]);
+
+  available = true;
+  nowMs = 3001;
+  assert.deepEqual(await broker.flushOutbox(), { published: 3 });
+  assert.equal(outbox.records.length, 0);
+  assert.equal(successful.length, 1);
+  assert.deepEqual(successful[0].messages.map((message) => JSON.parse(message.value).eventId), ["evt-a", "evt-b", "evt-c"]);
+  await broker.close();
+});
+
+test("[TC73] close drains queued events to durable outbox before disconnect", async () => {
+  const outbox = createOutbox();
+  let disconnected = false;
+  const broker = new brokerModule.MessageBroker({
+    outboxCollection: outbox.collection,
+    dispatchDelayMs: 60_000,
+    producer: {
+      async send() { throw new Error("Kafka unavailable"); },
+      async disconnect() { disconnected = true; }
+    }
+  });
+  broker.publish("ride.created", { eventId: "evt-close-a", bookingId: "BKG-CLOSE-A" });
+  broker.publish("ride.created", { eventId: "evt-close-b", bookingId: "BKG-CLOSE-B" });
+  await broker.close();
+  assert.equal(disconnected, true);
+  assert.equal(broker.queue.length, 0);
+  assert.deepEqual(outbox.records.map((record) => record.payload.eventId), ["evt-close-a", "evt-close-b"]);
+});
+
+
+test('[TC38, TC73] failed startup connection still schedules default durable replay', async () => {
+  const outbox = createOutbox();
+  let nowMs = 1000;
   let available = false;
   let scheduled;
   let unrefCalled = false;
@@ -160,40 +279,39 @@ test('[TC38, TC73] failed startup connection still schedules automatic outbox re
   };
   globalThis.clearInterval = () => {};
 
-  const outboxCollection = {
-    async insertOne(record) { records.push({ _id: 'startup-outbox-1', ...record }); },
-    find() { return { sort() { return { toArray: async () => records.map((record) => ({ ...record })) }; } }; },
-    async deleteOne({ _id }) {
-      const index = records.findIndex((record) => record._id === _id);
-      if (index === -1) return { deletedCount: 0 };
-      records.splice(index, 1);
-      return { deletedCount: 1 };
-    }
-  };
-  const producer = {
-    async connect() { throw new Error('Kafka unavailable at startup'); },
-    async disconnect() {},
-    async send() {
-      if (!available) throw new Error('Kafka unavailable');
-    }
-  };
+  const broker = new brokerModule.MessageBroker({
+    producer: {
+      async connect() { throw new Error('Kafka unavailable at startup'); },
+      async send(batch) {
+        if (!available) throw new Error('Kafka unavailable');
+        return batch;
+      },
+      async disconnect() {}
+    },
+    outboxCollection: outbox.collection,
+    autoReplay: true,
+    clock: () => nowMs,
+    dispatchDelayMs: 60_000,
+    circuitOpenMs: 2000
+  });
 
   try {
-    const broker = new brokerModule.MessageBroker({ producer, outboxCollection, autoReplay: true });
+    assert.equal(brokerModule.default.autoReplay, true, 'service singleton must enable replay by default');
     await broker.connect();
     assert.equal(scheduled?.delay, 10000);
     assert.equal(unrefCalled, true);
 
-    const buffered = await broker.publish('ride.created', { bookingId: 'BKG-STARTUP-1' });
-    assert.deepEqual(buffered, { published: false, buffered: true });
-    assert.equal(records.length, 1);
+    broker.publish('ride.created', { eventId: 'evt-startup', bookingId: 'BKG-STARTUP' });
+    assert.deepEqual(await broker.drainQueue(), { published: 0, buffered: 1 });
+    assert.equal(outbox.records.length, 1);
 
     available = true;
+    nowMs = 3001;
     scheduled.callback();
     await new Promise((resolve) => setImmediate(resolve));
-    assert.equal(records.length, 0);
-    await broker.close();
+    assert.equal(outbox.records.length, 0, 'scheduled replay removes only successfully delivered records');
   } finally {
+    await broker.close();
     globalThis.setInterval = originalSetInterval;
     globalThis.clearInterval = originalClearInterval;
   }
