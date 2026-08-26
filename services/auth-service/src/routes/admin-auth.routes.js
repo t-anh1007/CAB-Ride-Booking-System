@@ -9,6 +9,7 @@ function createAdminAuthRoutes(adminAuthController) {
 
     router.post('/login/admin', authRateLimitMiddleware, validationMiddleware(adminLoginSchema), adminAuthController.loginAdmin);
     router.post('/mfa/challenge', authRateLimitMiddleware, validationMiddleware(mfaChallengeSchema), adminAuthController.mfaChallenge);
+    router.get('/admin/audit', adminAuthController.listAudit);
 
     return router;
 }

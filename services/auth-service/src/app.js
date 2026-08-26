@@ -123,7 +123,7 @@ function createApp(options = {}) {
             auditService,
             env,
         });
-    const adminAuthController = options.adminAuthController || createAdminAuthController(adminAuthService);
+    const adminAuthController = options.adminAuthController || createAdminAuthController(adminAuthService, auditRepository);
     const otpAuthController = options.otpAuthController || createOtpAuthController(otpAuthService);
     const sessionController = options.sessionController || createSessionController(sessionService);
     const jwksController = options.jwksController || createJwksController(jwtService);
