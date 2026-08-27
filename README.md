@@ -39,8 +39,6 @@ Khách hàng đặt chuyến · Tài xế nhận cuốc realtime · Quản trị
 
 ## 0. Performance Benchmarks
 
-> Benchmark chạy trên laptop phát triển với Docker Compose cục bộ. Đây là số đo local, không phải cam kết production. **0% request lỗi không đồng nghĩa latency đã đạt threshold.**
-
 ### 0.1. Load test
 
 | Kịch bản | Tải | Request/check | HTTP lỗi | Throughput | p95 | Ngưỡng | Trạng thái |
@@ -66,7 +64,7 @@ Booking đã cải thiện p95 từ **1.150,9 ms xuống 679,9 ms** (khoảng 41
 
 ### 0.3. Bằng chứng và cách tái tạo
 
-- Báo cáo đầy đủ, môi trường, bảng SHA-256 và phân tích nút thắt: [benchmark_report.md](benchmark_report.md).
+- Báo cáo đầy đủ, môi trường, bảng SHA-256 và phân tích nút thắt: [benchmark_report.md](docs/reports/benchmark_report.md).
 - Kịch bản k6: [hướng dẫn](tests/load/README.md), [booking](tests/load/booking-load.js), [ETA](tests/load/eta-load.js), [pricing](tests/load/spike-pricing.js).
 - Security benchmark: [báo cáo](docs/benchmarks/security/cv-security-metrics-2026-08-20.md), [sec-bench.mjs](docs/benchmarks/security/sec-bench.mjs), [mtls-bench.mjs](docs/benchmarks/security/mtls-bench.mjs).
 - Baseline trong báo cáo: commit `aa665d3bdd6a2dbd48d773e677035d8e3ac0864e`, ngày 2026-08-26.

@@ -52,8 +52,8 @@ Nền tảng đặt xe (ride-hailing) kiến trúc **microservices, event-driven
 - `message-broker/kafka/`, `data-layer/` (postgresql, mongodb, redis)
 - `docs/` — kiến trúc, security audit từng service, benchmark
 
-Tài liệu quy định phạm vi: `CAB-BOOKING-SYSTEM.pdf` (thiết kế kiến trúc) và
-`final_PROJECT_grading-factor` (**121 test case / 12 level** — tiêu chí chấm điểm thực thi).
+Tài liệu quy định phạm vi: `docs/spec/CAB-BOOKING-SYSTEM.pdf` (thiết kế kiến trúc) và
+`docs/spec/final_PROJECT_grading-factor.pdf` (**121 test case / 12 level** — tiêu chí chấm điểm thực thi).
 
 ### Ghi chú trạng thái
 - Observability stack (Prometheus / Grafana / Jaeger / ELK — Level 12) **tạm gác**, thêm sau khi hoàn tất các phần khác.
