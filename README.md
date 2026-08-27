@@ -1,5 +1,7 @@
 <div align="center">
 
+**🇻🇳 Tiếng Việt** · [🇬🇧 English](README.en.md)
+
 # CAB — Intelligent Ride Booking System
 
 **Nền tảng đặt xe đa vai trò theo kiến trúc microservices, event-driven và AI-assisted**
