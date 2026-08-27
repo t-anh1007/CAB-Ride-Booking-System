@@ -53,16 +53,22 @@ export async function createGatewayApp(options = {}) {
 
   const app = express();
   app.disable("x-powered-by");
+  const corsAllowedOrigins = resolveCorsAllowedOrigins(env);
 
-  // Custom CORS Middleware
+  // Credentialed browser requests must receive their specific allowed origin.
   app.use((req, res, next) => {
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Idempotency-Key");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    
+    const origin = req.get("origin");
+
+    if (origin && corsAllowedOrigins.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Idempotency-Key");
+      res.vary("Origin");
+    }
+
     if (req.method === "OPTIONS") {
-      return res.status(200).end();
+      return res.status(204).end();
     }
     next();
   });
@@ -229,4 +235,26 @@ function normalizeTargetUserIds(userIds, singleUserId) {
         .filter(Boolean)
     )
   );
+}
+
+function resolveCorsAllowedOrigins(env) {
+  const configuredOrigins = String(env.CORS_ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (configuredOrigins.length > 0) {
+    return new Set(configuredOrigins);
+  }
+
+  if (env.NODE_ENV === "production") {
+    return new Set();
+  }
+
+  return new Set([
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:5176"
+  ]);
 }

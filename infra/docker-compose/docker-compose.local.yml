@@ -22,6 +22,8 @@ services:
     mem_limit: 256m
     env_file:
       - ../../gateway/api-gateway/.env.docker
+    environment:
+      GATEWAY_LOAD_TEST_MODE: ${GATEWAY_LOAD_TEST_MODE:-false}
     ports:
       - "3000:3000"
     volumes:

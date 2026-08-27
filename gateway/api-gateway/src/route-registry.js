@@ -29,6 +29,20 @@ export function createRouteRegistry({ env = process.env, upstreamTimeoutMs = 500
   }));
 
   const authRatePolicy = createRatePolicy("auth", 100, 60_000, "ip");
+  const bookingLoadTestMode = env.GATEWAY_LOAD_TEST_MODE === "true"
+    && String(env.NODE_ENV ?? "").trim().toLowerCase() !== "production";
+  const bookingCreateRatePolicy = createRatePolicy(
+    "booking-create",
+    bookingLoadTestMode ? 100_000 : 10,
+    10_000,
+    "user-or-ip"
+  );
+  const bookingCreateQuotaPolicy = createQuotaPolicy(
+    "booking-create-daily",
+    bookingLoadTestMode ? 1_000_000 : 100,
+    24 * 60 * 60_000,
+    "user-or-ip"
+  );
 
   const policies = [
     {
@@ -131,8 +145,8 @@ export function createRouteRegistry({ env = process.env, upstreamTimeoutMs = 500
       method: "POST",
       path: "/api/v1/bookings",
       allowedRoles: ["Customer", "Admin"],
-      rateLimit: createRatePolicy("booking-create", 10, 10_000, "user-or-ip"),
-      quota: createQuotaPolicy("booking-create-daily", 100, 24 * 60 * 60_000, "user-or-ip"),
+      rateLimit: bookingCreateRatePolicy,
+      quota: bookingCreateQuotaPolicy,
       validationSchema: httpSchemas.bookingCreate,
       idempotency: {
         required: true,

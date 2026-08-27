@@ -12,7 +12,8 @@ Only Worker can change project bytes, and only through `write`. The CLI verifies
 |---|---|
 | EASY + LOW | luna / medium |
 | MEDIUM or balanced | terra / high |
-| HARD, HIGH, or CRITICAL | sol / high or xhigh |
+| HARD | terra / high |
+| Security-sensitive, HIGH, or CRITICAL | sol / high or xhigh |
 | Deep Auditor | sol / ultra |
 
 `requested_runtime.enforced` must be `false`: the tuple records routing intent and is not proof that a platform honored it. HIGH and CRITICAL require audit. LOW may skip audit when residual uncertainty is empty; MODERATE requires a recorded Coordinator decision.

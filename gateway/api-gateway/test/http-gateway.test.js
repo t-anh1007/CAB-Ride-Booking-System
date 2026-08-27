@@ -28,6 +28,46 @@ const VALID_BOOKING_PAYLOAD = {
   }
 };
 
+test("gateway returns an explicit allowed origin for credentialed browser requests", async (t) => {
+  const runtime = await createGatewayApp({
+    env: createEnv({
+      CORS_ALLOWED_ORIGINS: "http://localhost:5174"
+    }),
+    storeMode: "memory"
+  });
+  t.after(async () => runtime.close());
+
+  const response = await request(runtime.app)
+    .options("/api/v1/auth/login/otp/request")
+    .set("Origin", "http://localhost:5174")
+    .set("Access-Control-Request-Method", "POST")
+    .set("Access-Control-Request-Headers", "content-type")
+    .expect(204);
+
+  assert.equal(response.headers["access-control-allow-origin"], "http://localhost:5174");
+  assert.equal(response.headers["access-control-allow-credentials"], "true");
+  assert.match(response.headers.vary, /Origin/);
+});
+
+test("gateway does not grant credentialed CORS access to an unlisted origin", async (t) => {
+  const runtime = await createGatewayApp({
+    env: createEnv({
+      CORS_ALLOWED_ORIGINS: "http://localhost:5174"
+    }),
+    storeMode: "memory"
+  });
+  t.after(async () => runtime.close());
+
+  const response = await request(runtime.app)
+    .options("/api/v1/auth/login/otp/request")
+    .set("Origin", "https://untrusted.example")
+    .set("Access-Control-Request-Method", "POST")
+    .expect(204);
+
+  assert.equal(response.headers["access-control-allow-origin"], undefined);
+  assert.equal(response.headers["access-control-allow-credentials"], undefined);
+});
+
 test("gateway verifies RS256 token via Auth JWKS, validates /me, then proxies protected request", async (t) => {
   const auth = await createAuthServer();
   const upstream = await createUpstreamServer(({ req, json, sendJson }) => {

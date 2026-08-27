@@ -22,20 +22,22 @@ async function startServer() {
   }
 
   try {
-    // START KAFKA CONSUMERS
     await messageBroker.connect();
-    
-    console.log('[Kafka] Starting Payment Consumer...');
-    await startPaymentConsumer(env);
-    console.log('[Kafka] Payment Consumer started.');
-    
-    console.log('[Kafka] Starting Booking Consumer...');
-    await startBookingConsumer(env);
-    console.log('[Kafka] Booking Consumer started.');
-    
-    console.log('[Kafka] All consumers (Payment, Booking) started');
   } catch (error) {
-    console.warn('[Kafka] Consumers failed to start:', error.message);
+    console.warn('[Kafka] Broker connection failed:', error.message);
+  }
+
+  for (const [name, start] of [
+    ['Payment', startPaymentConsumer],
+    ['Booking', startBookingConsumer]
+  ]) {
+    try {
+      console.log(`[Kafka] Starting ${name} Consumer...`);
+      await start(env);
+      console.log(`[Kafka] ${name} Consumer started.`);
+    } catch (error) {
+      console.warn(`[Kafka] ${name} Consumer failed to start:`, error.message);
+    }
   }
 
   const port = env.port || 3109;
