@@ -1,0 +1,6 @@
+ok 1 - [TC27] real assign and accept routes perform SEARCHING to WAITING_FOR_ACCEPTANCE to ACCEPTED
+ok 2 - [TC32] illegal terminal transition is rejected without persistence or event
+ok 3 - [TC32] completing an in-progress ride persists COMPLETED with a timestamp and event
+# tests 3
+# pass 3
+# fail 0

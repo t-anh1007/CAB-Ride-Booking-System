@@ -183,3 +183,67 @@ lại kiểm thử, đều xác nhận `evidence_integrity: VALID`, `drift_detec
 Ba file `booking-summary.json`, `eta-summary.json`, `pricing-summary.json` trong
 `tests/load/results/` là **placeholder** (`environment-bounded`), không phải số đo
 thật. Số đo k6 thực tế nằm ở `.agents/governance/runtime/p3-*-summary.json` (bảng 4.1).
+
+---
+
+## 5. QA Benchmark — Requirement coverage & Pass rate theo 121 TC (2026-09-29)
+
+**Mục tiêu:** đo mức độ bao phủ yêu cầu và tỷ lệ pass theo bộ 121 test case của
+`docs/spec/final_PROJECT_grading-factor.pdf`, dưới góc nhìn Tester/BA.
+**Baseline mã nguồn:** git commit `d9b725e`, branch `feature/ui-redesign`.
+**Môi trường:** Docker Compose local (image build sẵn, không rebuild), gateway `:3000`,
+Node test runner (unit), Postman/Newman (API), k6 (tải — dùng lại số đo mục 1).
+
+### 5.1 Kết quả tổng
+
+| Chỉ số | Kết quả | Cách tính |
+|--------|---------|-----------|
+| **Requirement coverage** | **50/121 TC = 41,3%** | TC có ≥1 test tự động gắn mã TC (unit / Postman / k6) |
+| **Pass rate (TC-level)** | **29/50 TC = 58,0%** | TC chỉ PASS khi *mọi* test gắn với nó đều pass |
+| Unit test (5 service) | 27/29 test pass (93,1%) | `npm test` — booking, driver, payment, pricing, ride |
+| Postman — `cab-levels` (bộ đang duy trì) | 5/10 request pass | Newman qua gateway |
+| Postman — `collection_lv6` (Level 1 + 6) | 9/30 request pass | Newman, env `environment_lv6.json` |
+| **p95 booking trước/sau tối ưu** | **1.150,9 → 679,9 ms (−41%)** | k6, gateway 100 VU (mục 1.1) |
+
+Coverage theo nhóm: Level 1 (TC1–10) 10/10 · Level 2 (TC11–20) 6/10 ·
+Level 3 (TC21–30) 6/10 · Level 4 (TC31–40) 6/10 · Level 5 (TC41–50) 1/10 ·
+Level 6 (TC51–60) 10/10 · Level 7 (TC61–70) 5/10 · Level 8 (TC71–80) 2/10 ·
+Level 9 (TC81–90) 1/10 · Level 10 (TC91–100) 3/10 · Level 11–12 (TC101–121) 0/21.
+
+### 5.2 Danh sách TC FAIL và nguyên nhân gốc (defect log)
+
+| TC | Hiện tượng | Nguyên nhân gốc | Phân loại |
+|----|-----------|-----------------|-----------|
+| TC16, TC42 | Unit `pricing-invariants` fail (0 ≠ 1), chạy ~9s/test, kết quả không ổn định giữa các lần chạy (1–2 fail) | Test phụ thuộc thời gian chờ surge-service | **Flaky test** |
+| TC5, TC8, TC9 | Postman lv6 không kết nối được | Collection gọi thẳng cổng nội bộ 3107/3101/3108, compose không publish | Test config lệch môi trường |
+| TC4, TC6, TC54 | 401 Unauthorized | Request trong collection thiếu header `Authorization: Bearer {{access_token}}` (TC3 có, các TC này không) | Lỗi test script |
+| TC51–53, 55, 57–60 | 404 | Collection gọi `/api/v1/matching/best-driver` trên :8000 — route không tồn tại ở matching-service hiện tại | **Contract drift** (test ↔ API) |
+| TC31 | 400 `userId Required` | Request booking trong collection thiếu field `userId` mà schema bắt buộc | Contract drift |
+| TC24 | 400 `Idempotency-Key header is required` | Collection chưa gửi header idempotency bắt buộc | Contract drift |
+| TC95 | 404 thay vì 403 | Route `/api/v1/admin/metrics` không tồn tại → không kiểm được RBAC | Contract drift |
+| TC61 | 111 req/s < mục tiêu 1.000 req/s | Giới hạn laptop dev + đường ghi booking | Không đạt NFR |
+| TC68 | p95 booking 679,9 ms > ngưỡng 300 ms | Như trên | Không đạt NFR |
+
+**Điều kiện tiền đề đã xử lý:** lần chạy đầu TC21 trả 503 do zone `w3gv5` chưa có tài xế
+active; seed tạm `SADD supply:zone:w3gv5 drv_bench_001` vào Redis → TC21 pass.
+
+**Nhận xét BA/QA:** 17/21 TC fail là do *test artifact (collection/config) lệch với API contract* chứ
+không phải lỗi nghiệp vụ; 2 TC là flaky test, 2 TC không đạt NFR hiệu năng — ưu tiên đồng bộ Postman collection với OpenAPI hiện tại.
+71 TC chưa có test tự động tập trung ở Level 5 (AI validation), 8 (resilience),
+9 (security injection/XSS) và 11–12 (deployment/monitoring — Level 12 đang tạm gác).
+
+### 5.3 Tái tạo & bằng chứng
+
+```bash
+docker compose --env-file .env.docker -f infra/docker-compose/docker-compose.local.yml up -d --no-build
+docker exec cab-redis redis-cli SADD supply:zone:w3gv5 drv_bench_001
+npx newman run scripts/postman/cab-levels.postman_collection.json -e scripts/postman/cab-local.postman_environment.json
+npx newman run tests/postman/collection_lv6.json -e tests/postman/environment_lv6.json
+python docs/reports/benchmark-evidence/build_traceability.py   # sinh lại matrix + %
+```
+
+Bằng chứng trong `docs/reports/benchmark-evidence/`:
+- `traceability_matrix.md` — ma trận 121 TC × nguồn test × trạng thái
+- `unit-*.tap` — kết quả unit test từng service
+- `newman-*.summary.json` — kết quả Newman đã lược bỏ token/response body
+- `build_traceability.py` — script tính coverage/pass rate

@@ -1,0 +1,6 @@
+ok 1 - [TC5] go-online returns ONLINE and writes geo plus supply state
+ok 2 - [TC13, TC57] offline driver is removed from supply and absent from availability
+ok 3 - [TC23] online location update refreshes the corresponding supply zone
+# tests 3
+# pass 3
+# fail 0

@@ -1,0 +1,559 @@
+{
+ "run": {
+  "timings": {
+   "responseAverage": 255.04095238095246,
+   "responseMin": 2,
+   "responseMax": 1759,
+   "responseSd": 483.22471676677634,
+   "dnsAverage": 0,
+   "dnsMin": 0,
+   "dnsMax": 0,
+   "dnsSd": 0,
+   "firstByteAverage": 0,
+   "firstByteMin": 0,
+   "firstByteMax": 0,
+   "firstByteSd": 0,
+   "started": 1790622724297,
+   "completed": 1790622732619
+  },
+  "executions": [
+   {
+    "item": {
+     "name": "TC1 - Setup user context (seeded account)"
+    },
+    "response": {
+     "code": 200
+    },
+    "assertions": [
+     {
+      "assertion": "TC1 gateway/auth health 200"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC2.1 - Dang nhap OTP request"
+    },
+    "response": {
+     "code": 202
+    },
+    "assertions": [
+     {
+      "assertion": "TC2.1 status 202"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC2.2 - Dang nhap OTP verify tra JWT"
+    },
+    "response": {
+     "code": 200
+    },
+    "assertions": [
+     {
+      "assertion": "TC2.2 status 200"
+     },
+     {
+      "assertion": "TC2.2 co access token"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC2.3 - Driver dang nhap OTP request (phu)"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC2.3 status 202",
+      "error": {
+       "message": "expected response to have status code 202 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC2.4 - Driver dang nhap OTP verify tra JWT (phu)"
+    },
+    "response": {
+     "code": 400
+    },
+    "assertions": [
+     {
+      "assertion": "TC2.4 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 400"
+      }
+     },
+     {
+      "assertion": "TC2.4 co access token driver",
+      "error": {
+       "message": "expected null to be a string"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC3 - Tao booking voi input hop le"
+    },
+    "response": {
+     "code": 201
+    },
+    "assertions": [
+     {
+      "assertion": "TC3 status 201"
+     },
+     {
+      "assertion": "TC3 status REQUESTED/CONFIRMED-like"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC4 - Lay danh sach booking cua user"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "TC4 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 401"
+      }
+     },
+     {
+      "assertion": "TC4 tra ve list",
+      "error": {
+       "message": "expected null to be an array"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC5 - Driver chuyen trang thai online"
+    },
+    "response": {
+     "code": null
+    },
+    "assertions": [
+     {
+      "assertion": "TC5 status 200",
+      "error": {
+       "message": "expected PostmanResponse{ …(5) } to have property 'code'"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC6 - Booking tao voi status REQUESTED"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "TC6 status 201",
+      "error": {
+       "message": "expected response to have status code 201 but got 401"
+      }
+     },
+     {
+      "assertion": "TC6 booking status REQUESTED",
+      "error": {
+       "message": "expected undefined to deeply equal 'REQUESTED'"
+      }
+     },
+     {
+      "assertion": "TC6 co createdAt",
+      "error": {
+       "message": "expected undefined to be a string"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC7 - API ETA tra ve > 0"
+    },
+    "response": {
+     "code": 200
+    },
+    "assertions": [
+     {
+      "assertion": "TC7 status 200"
+     },
+     {
+      "assertion": "TC7 eta > 0 va hop ly"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC8 - Pricing API tra gia hop le"
+    },
+    "response": {
+     "code": null
+    },
+    "assertions": [
+     {
+      "assertion": "TC8 status 200/503 (phu thuoc supply thuc te)",
+      "error": {
+       "message": "expected [ 200, 503 ] to include undefined"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC9 - Notification gui thanh cong"
+    },
+    "response": {
+     "code": null
+    },
+    "assertions": [
+     {
+      "assertion": "TC9 status 200/202",
+      "error": {
+       "message": "expected [ 200, 202 ] to include undefined"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC10 - Logout invalidate token"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "TC10 logout status 200"
+     },
+     {
+      "assertion": "TC10 refresh token cu bi invalidate"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC10 - Logout invalidate token"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "TC10 logout status 200"
+     },
+     {
+      "assertion": "TC10 refresh token cu bi invalidate"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC51 - Agent chon driver gan nhat"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC51 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     },
+     {
+      "assertion": "TC51 chon dung driver gan nhat (drv_2)",
+      "error": {
+       "message": "expected undefined to deeply equal 'drv_2'"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC52 - Agent can nhac rating (khong chi distance)"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC52 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     },
+     {
+      "assertion": "TC52 uu tien chat luong tot hon khi can nhac tong the",
+      "error": {
+       "message": "expected undefined to deeply equal 'drv_b'"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC53 - Agent can bang ETA vs quality (multi-objective)"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC53 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     },
+     {
+      "assertion": "TC53 co quyet dinh toi uu (driver duoc chon hop le)",
+      "error": {
+       "message": "expected [ Array(2) ] to include undefined"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC54 - Agent goi dung tool ETA va Pricing"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "TC54 context endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC54 - Agent goi dung tool ETA va Pricing"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "TC54 context endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC55 - Agent xu ly context thieu du lieu"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC55 status 200, agent khong crash khi thieu context",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     },
+     {
+      "assertion": "TC55 van tra driver_id hop le",
+      "error": {
+       "message": "expected undefined to be a string"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC56 - Agent retry khi service loi (ETA)"
+    },
+    "response": {
+     "code": 200
+    },
+    "assertions": [
+     {
+      "assertion": "TC56 ETA endpoint success"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC57 - Agent khong chon driver offline"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC57 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     },
+     {
+      "assertion": "TC57 khong assign driver offline",
+      "error": {
+       "message": "expected undefined to deeply equal 'drv_online'"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC58 - Agent log decision day du"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC58 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     },
+     {
+      "assertion": "TC58 co log field quan trong",
+      "error": {
+       "message": "expected undefined to be a string"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC59 - Agent xu ly request song song"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC59 health endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC59 - Agent xu ly request song song"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC59 health endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC59 - Agent xu ly request song song"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC59 health endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC59 - Agent xu ly request song song"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC59 health endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC59 - Agent xu ly request song song"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC59 health endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC59 - Agent xu ly request song song"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC59 health endpoint status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC60 - Agent fallback rule-based khi AI fail"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "TC60 status 200",
+      "error": {
+       "message": "expected response to have status code 200 but got 404"
+      }
+     },
+     {
+      "assertion": "TC60 su dung fallback rule-based",
+      "error": {
+       "message": "expected undefined to deeply equal 'rule-based-matching'"
+      }
+     }
+    ]
+   }
+  ]
+ }
+}
