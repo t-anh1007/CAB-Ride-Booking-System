@@ -18,7 +18,7 @@ export default function AuditLogPage() {
         return () => { active = false; };
     }, [client]);
 
-    return <section><h1>Nhật ký audit</h1>
+    return <section className="page cab-admin-page"><p className="cab-eyebrow">HOẠT ĐỘNG HỆ THỐNG</p><h1>Nhật ký audit</h1>
         {error && <DataState error={error} />}
         {!error && !entries && <p className="muted">Đang tải…</p>}
         {entries && <table className="table"><thead><tr><th>Thời điểm</th><th>Sự kiện</th><th>Trạng thái</th></tr></thead><tbody>

@@ -18,7 +18,7 @@ export default function SurgeControlPage() {
         return () => { active = false; };
     }, [client, zone]);
 
-    return <section><h1>Surge khu vực</h1><div className="card">
+    return <section className="page cab-admin-page"><p className="cab-eyebrow">ĐỊNH GIÁ THEO KHU VỰC</p><h1>Surge khu vực</h1><div className="card">
         <label>Vùng <input value={zone} onChange={event => setZone(event.target.value)} aria-label="Vùng forecast" /></label>
         {error && <DataState error={error} />}
         {!error && !data && <p className="muted">Đang tải trạng thái surge…</p>}

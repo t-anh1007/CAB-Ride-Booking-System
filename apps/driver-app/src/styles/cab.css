@@ -22,6 +22,8 @@
 .cab-route--drop span { color: var(--cab-danger); }
 .cab-route p { margin: 0; font-weight: 700; }
 .cab-action-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+.cab-active-ride .map { margin: 18px 0; }
+.cab-active-ride > button { position: sticky; bottom: 84px; z-index: 2; width: 100%; box-shadow: var(--cab-shadow); }
 .page:not(.cab-map-page):not(.cab-auth-page):not(.cab-incoming-page) { max-width: 760px; margin-inline: auto; }
 .page:not(.cab-map-page) .card { display: grid; gap: 14px; }
 @media (max-width: 800px) { .cab-map-page { display: block; padding: 20px 0 100px; } .cab-map-heading { padding: 0 18px; } .cab-map-page .map { height: 44dvh; min-height: 290px; border-radius: 0; } .cab-bottom-sheet { position: relative; margin: -24px 16px 0; } }
