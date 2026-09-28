@@ -24,7 +24,7 @@ test("customer feature contracts preserve the connected mobile workflow", async 
   for (const provider of ["AuthProvider", "BookingProvider", "RealtimeProvider"]) assert.ok(app.includes(provider), provider);
   for (const route of ["/login", "/home", "/destination", "/options", "/searching", "/tracking/:id", "/payment/:id", "/rating/:id", "/history", "/profile"]) assert.ok(router.includes(route), route);
   for (const key of ["cab.customer.session", "cab.customer.onboarding.complete", "cab.customer.recent.destinations", "cab.customer.saved-locations"]) assert.ok(`${auth}\n${source}`.includes(key), key);
-  for (const token of ["navigator.geolocation", "reversegeocode", "expiresin", "refresh quote", "routepolyline", "driver.rating", "driver.plate", "driver.eta", "datefilter", "statusfilter", "/users/", "/wallet", "/preferences", "/saved-locations"]) assert.ok(source.includes(token), token);
+  for (const token of ["navigator.geolocation", "reversegeocode", "expiresin", "làm mới báo giá", "routepolyline", "driver.rating", "driver.plate", "driver.eta", "datefilter", "statusfilter", "/users/", "/wallet", "/preferences", "/saved-locations"]) assert.ok(source.includes(token), token);
   assert.ok(!source.includes("/modules/"), "connected pages must not import draft modules");
   assert.match(pages[4], /useEffect\s*\(\s*\(\)\s*=>[\s\S]*COMPLETED[\s\S]*nav\(/);
   assert.doesNotMatch(pages[4], /return\s+<[^>]+>[\s\S]*COMPLETED[\s\S]*nav\(/);
