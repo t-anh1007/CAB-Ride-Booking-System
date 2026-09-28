@@ -1,1 +1,1 @@
-export default function DataState({error,children}){return <div className="state">{children||error||"Dữ liệu hiện chưa khả dụng từ gateway. Màn hình chỉ đọc, không gửi thao tác thay đổi."}</div>}
+export default function DataState({error,children}){return <div className="state" role="alert">{children||<>Không tải được dữ liệu. Kiểm tra kết nối với hệ thống rồi tải lại trang.{error&&<span className="muted"> ({error})</span>}</>}</div>}

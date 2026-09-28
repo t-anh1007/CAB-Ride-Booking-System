@@ -34,15 +34,15 @@ export default function LoginPage() {
     };
 
     return <main className="page cab-admin-login"><p className="cab-eyebrow">CAB · OPERATIONS</p><h1>Quản trị CAB</h1><p className="cab-lead">Đăng nhập an toàn để theo dõi hoạt động theo thời gian thực.</p><div className="card">
-        <input value={email} onChange={event => setEmail(event.target.value)} placeholder="Email quản trị" autoComplete="username" />
-        {!challenge ? <input type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Mật khẩu" autoComplete="current-password" /> : <>
+        <label>Email quản trị<input type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="ten@cab.vn" autoComplete="username" /></label>
+        {!challenge ? <label>Mật khẩu<input type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Nhập mật khẩu" autoComplete="current-password" /></label> : <>
             {setup && <section className="state" aria-label="Thiết lập MFA">
                 <p>Thiết lập MFA lần đầu: thêm khóa này vào ứng dụng xác thực trước khi nhập mã.</p>
                 {setup.totpSecret && <code>{setup.totpSecret}</code>}
                 {setup.otpauthUrl && <p><a href={setup.otpauthUrl}>Mở ứng dụng xác thực</a></p>}
                 {setup.recoveryCodes?.length > 0 && <p>Mã khôi phục: {setup.recoveryCodes.join(", ")}</p>}
             </section>}
-            <input value={mfa} onChange={event => setMfa(event.target.value)} placeholder={recovery ? "Mã khôi phục" : "Mã MFA 6 số"} />
+            <label>{recovery ? "Mã khôi phục" : "Mã MFA 6 số"}<input value={mfa} onChange={event => setMfa(event.target.value)} placeholder={recovery ? "Nhập mã khôi phục" : "Nhập mã xác thực"} inputMode={recovery ? "text" : "numeric"} autoComplete="one-time-code" /></label>
             <label><input type="checkbox" checked={recovery} onChange={event => setRecovery(event.target.checked)} /> Dùng mã khôi phục</label>
         </>}
         <CabButton className="cab-full" onClick={submit}>{challenge ? "Xác minh MFA" : "Đăng nhập"}</CabButton>

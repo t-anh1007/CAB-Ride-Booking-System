@@ -22,6 +22,7 @@ export default function AuditLogPage() {
         {error && <DataState error={error} />}
         {!error && !entries && <p className="muted">Đang tải…</p>}
         {entries && <table className="table"><thead><tr><th>Thời điểm</th><th>Sự kiện</th><th>Trạng thái</th></tr></thead><tbody>
+            {!entries.length && <tr><td colSpan="3">Chưa có sự kiện audit.</td></tr>}
             {entries.map(entry => <tr key={entry.id}><td>{new Date(entry.createdAt).toLocaleString()}</td><td>{entry.eventType}</td><td>{entry.eventStatus}</td></tr>)}
         </tbody></table>}
     </section>;
