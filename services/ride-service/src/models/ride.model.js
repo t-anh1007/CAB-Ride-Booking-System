@@ -45,6 +45,7 @@ class Ride {
     this.etaMinutes = data.etaMinutes || null;
     this.startedAt = data.startedAt || null;
     this.completedAt = data.completedAt || null;
+    this.createdAt = data.createdAt || new Date().toISOString();
     this.updatedAt = data.updatedAt || new Date().toISOString();
   }
 
@@ -70,6 +71,7 @@ class Ride {
       etaMinutes: this.etaMinutes,
       startedAt: this.startedAt,
       completedAt: this.completedAt,
+      createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
   }

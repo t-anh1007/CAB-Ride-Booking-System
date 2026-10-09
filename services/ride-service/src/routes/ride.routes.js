@@ -18,6 +18,9 @@ router.post('/', rideController.createRide);
 // Get ride statistics
 router.get('/stats', rideController.getStatistics);
 
+// Admin: most recent rides (?limit=5, max 50)
+router.get('/recent', rideController.getRecentRides);
+
 // Get ride history for a user through ride-service gateway namespace
 router.get('/user/:userId', rideController.getUserRides);
 

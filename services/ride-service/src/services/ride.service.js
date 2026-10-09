@@ -561,7 +561,12 @@ async function cancelRide(rideId, userId = null, driverId = null, reason = '') {
   return ride;
 }
 
-async function getRideStatistics() {
+async function getRideStatistics(date) {
+  const daily = await getDailyKpis(date);
+  return { ...(await getStatusCounts()), ...daily };
+}
+
+async function getStatusCounts() {
   if (usesMongo()) {
     const [searching, driverAssigned, driverArriving, inProgress, completed, cancelled] =
       await Promise.all([
@@ -601,6 +606,85 @@ async function getRideStatistics() {
   };
 }
 
+// Admin dashboard KPIs: day boundaries use Vietnam time (UTC+7, no DST).
+const VN_OFFSET_MS = 7 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function vnDayStart(date) {
+  const base = date ? Date.parse(`${date}T00:00:00+07:00`) : Date.now();
+  if (!Number.isFinite(base)) {
+    const error = new Error('date must be YYYY-MM-DD');
+    error.statusCode = 422;
+    throw error;
+  }
+  return Math.floor((base + VN_OFFSET_MS) / DAY_MS) * DAY_MS - VN_OFFSET_MS;
+}
+
+function percentDelta(current, previous) {
+  if (!previous) return null;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
+function summarizeDay(list, firstRideByUser, start) {
+  const end = start + DAY_MS;
+  const inDay = (value) => {
+    const t = value ? new Date(value).getTime() : NaN;
+    return t >= start && t < end;
+  };
+  const rides = list.filter((r) => inDay(r.createdAt)).length;
+  const revenue = list
+    .filter((r) => r.status === RIDE_STATUS.COMPLETED && inDay(r.completedAt))
+    .reduce((sum, r) => sum + (Number(r.priceSnapshot) || 0), 0);
+  const newCustomers = [...firstRideByUser.values()].filter(inDay).length;
+  return { rides, revenue, newCustomers };
+}
+
+async function getDailyKpis(date) {
+  const todayStart = vnDayStart(date);
+  const yesterdayStart = todayStart - DAY_MS;
+  let list;
+  const firstRideByUser = new Map();
+  if (usesMongo()) {
+    const from = new Date(yesterdayStart);
+    list = await RideMongoModel.find({ $or: [{ createdAt: { $gte: from } }, { completedAt: { $gte: from } }] })
+      .select('status priceSnapshot createdAt completedAt').lean();
+    const firsts = await RideMongoModel.aggregate([
+      { $group: { _id: '$userId', first: { $min: '$createdAt' } } },
+      { $match: { first: { $gte: from } } }
+    ]);
+    firsts.forEach((f) => firstRideByUser.set(f._id, f.first));
+  } else {
+    list = Array.from(rides.values());
+    list.forEach((r) => {
+      const prev = firstRideByUser.get(r.userId);
+      if (!prev || new Date(r.createdAt) < new Date(prev)) firstRideByUser.set(r.userId, r.createdAt);
+    });
+  }
+  const today = summarizeDay(list, firstRideByUser, todayStart);
+  const yesterday = summarizeDay(list, firstRideByUser, yesterdayStart);
+  return {
+    date: new Date(todayStart + VN_OFFSET_MS).toISOString().slice(0, 10),
+    today,
+    yesterday,
+    deltas: {
+      rides: percentDelta(today.rides, yesterday.rides),
+      revenue: percentDelta(today.revenue, yesterday.revenue),
+      customers: percentDelta(today.newCustomers, yesterday.newCustomers)
+    }
+  };
+}
+
+async function listRecentRides(limit = 5) {
+  const size = Math.min(50, Math.max(1, Number.parseInt(limit, 10) || 5));
+  if (usesMongo()) {
+    return RideMongoModel.find({}).sort({ createdAt: -1 }).limit(size).lean();
+  }
+  return Array.from(rides.values())
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, size)
+    .map(serializeRide);
+}
+
 async function clearAllRides() {
   if (usesMongo()) {
     await RideMongoModel.deleteMany({});
@@ -623,6 +707,7 @@ export default {
   cancelRide,
   getHistoryByDriverId,
   getRideStatistics,
+  listRecentRides,
   clearAllRides,
 };
 
