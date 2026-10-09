@@ -1,1 +1,0 @@
-export default function DataState({error,children}){return <div className="state" role="alert">{children||<>Không tải được dữ liệu. Kiểm tra kết nối với hệ thống rồi tải lại trang.{error&&<span className="muted"> ({error})</span>}</>}</div>}

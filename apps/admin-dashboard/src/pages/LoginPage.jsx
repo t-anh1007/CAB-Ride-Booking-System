@@ -33,7 +33,7 @@ export default function LoginPage() {
         }
     };
 
-    return <main className="page cab-admin-login"><p className="cab-eyebrow">CAB · OPERATIONS</p><h1>Quản trị CAB</h1><p className="cab-lead">Đăng nhập an toàn để theo dõi hoạt động theo thời gian thực.</p><div className="card">
+    return <main className="ad-login"><section className="ad-login__brand"><span className="ad-logo ad-logo--xl">CAB</span><p>Hệ thống đặt xe toàn diện<br /><small>Khách hàng · Tài xế · Quản trị</small></p></section><section className="ad-login__form"><p className="ad-eyebrow">CAB · OPERATIONS</p><h1>Quản trị CAB</h1><p className="ad-lead">Đăng nhập an toàn để theo dõi hoạt động theo thời gian thực.</p><div className="ad-panel ad-login__card">
         <label>Email quản trị<input type="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="ten@cab.vn" autoComplete="username" /></label>
         {!challenge ? <label>Mật khẩu<input type="password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Nhập mật khẩu" autoComplete="current-password" /></label> : <>
             {setup && <section className="state" aria-label="Thiết lập MFA">
@@ -47,5 +47,5 @@ export default function LoginPage() {
         </>}
         <CabButton className="cab-full" onClick={submit}>{challenge ? "Xác minh MFA" : "Đăng nhập"}</CabButton>
         {error && <SurfaceState kind="error" detail={error} />}
-    </div></main>;
+    </div></section></main>;
 }
