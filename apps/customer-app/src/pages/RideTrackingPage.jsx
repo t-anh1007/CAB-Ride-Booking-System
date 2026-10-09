@@ -1,16 +1,21 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { BaseMap, DestinationPin, DriverMarker, RoutePolyline } from "@cab/web-shared";
 import { useRealtimeEvents } from "../providers/RealtimeProvider.jsx";
 import { useBooking } from "../providers/BookingProvider.jsx";
+import { useAuth } from "../providers/AuthProvider.jsx";
 import { Icon } from "../components/Icons.jsx";
 
 const steps = ["Đã đặt xe", "Tài xế nhận", "Đang di chuyển", "Đến nơi"];
 const stepOf = { ASSIGNED: 1, ACCEPTED: 1, ARRIVED: 1, PICKED_UP: 2, IN_PROGRESS: 2, COMPLETED: 3 };
+// Khách chỉ được hủy trước khi đón khách; ride-service từ chối COMPLETED/CANCELLED.
+const notCancellable = new Set(["PICKED_UP", "IN_PROGRESS", "COMPLETED", "CANCELLED"]);
+const methodLabel = { cash: "Tiền mặt", card: "Thẻ", wallet: "Ví" };
 const initials = (name = "") => name.split(" ").filter(Boolean).slice(-2).map((part) => part[0]).join("").toUpperCase() || "TX";
 
 export default function RideTrackingPage() {
-  const { id } = useParams(); const nav = useNavigate(); const { events, status } = useRealtimeEvents(); const { drop, quote } = useBooking();
+  const { id } = useParams(); const nav = useNavigate(); const { events, status } = useRealtimeEvents(); const { drop, quote, paymentMethod } = useBooking(); const { client } = useAuth();
+  const [confirming, setConfirming] = useState(false), [cancelling, setCancelling] = useState(false), [cancelError, setCancelError] = useState("");
   const relevant = useMemo(() => events.filter((event) => String(event.rideId || event.ride_id) === id), [events, id]);
   const location = relevant.find((event) => event.type === "driver.location.updated"); const state = relevant.find((event) => event.type === "ride.status.changed"); const assigned = relevant.find((event) => event.type === "driver.assigned" || event.type === "ride.assigned"); const driver = assigned?.driver || state?.driver || {};
   useEffect(() => { if (state?.status === "COMPLETED") nav(`/payment/${id}`, { replace: true }); }, [state?.status, id, nav]);
@@ -19,6 +24,8 @@ export default function RideTrackingPage() {
   const eta = driver.eta ?? state?.eta; const distanceKm = state?.distanceKm ?? assigned?.distanceKm; const current = stepOf[rideStatus] ?? 0;
   const arrival = eta != null ? new Date(Date.now() + Number(eta) * 60000).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : null;
   const fare = state?.fare?.amount ?? state?.amount ?? quote?.priceSnapshot?.amount ?? quote?.amount;
+  const canCancel = !notCancellable.has(rideStatus);
+  const cancel = async () => { setCancelling(true); setCancelError(""); try { await client.post(`/rides/${id}/cancel`, { reason: "Khách hàng hủy chuyến" }); nav("/home", { replace: true }); } catch (e) { setCancelError(e.message || "Không thể hủy chuyến"); } finally { setCancelling(false); } };
   const share = () => navigator.share?.({ title: "Chuyến đi CAB", text: `Tôi đang trên chuyến đi CAB cùng ${driver.name || "tài xế"} (${driver.plate || "—"}).` }).catch(() => {});
   return <main className="cx-screen cx-screen--tall">
     <BaseMap center={point} className="map cx-map"><RoutePolyline geometry={geometry} /><DriverMarker position={point} heading={location?.heading} />{drop && <DestinationPin position={[drop.lat, drop.lng]} />}</BaseMap>
@@ -34,11 +41,11 @@ export default function RideTrackingPage() {
         <a href={driver.phone ? `tel:${driver.phone}` : undefined} aria-disabled={!driver.phone}><span><Icon name="phone" /></span>Gọi</a>
         <a href={driver.phone ? `sms:${driver.phone}` : undefined} aria-disabled={!driver.phone}><span><Icon name="chat" /></span>Nhắn tin</a>
         <button type="button" onClick={share}><span><Icon name="share" /></span>Chia sẻ</button>
-        <button type="button" className="is-danger" aria-disabled="true" title="Liên hệ tổng đài để hủy chuyến đang diễn ra"><span><Icon name="close" /></span>Hủy</button>
+        <button type="button" className="is-danger" aria-disabled={!canCancel} title={canCancel ? "Hủy chuyến" : "Không thể hủy khi chuyến đã bắt đầu"} onClick={() => canCancel && setConfirming(true)}><span><Icon name="close" /></span>Hủy</button>
       </div>
       <div className="cx-eta-row">
         <span><small>Đến nơi sau</small><strong>{eta != null ? `${eta} phút` : "Đang tính"}</strong>{distanceKm != null ? <em> ({String(distanceKm).replace(".", ",")} km)</em> : null}</span>
-        <span className="cx-fare"><strong>{fare != null ? `${Number(fare).toLocaleString("vi-VN")}đ` : "—"}</strong><small>Tiền mặt</small></span>
+        <span className="cx-fare"><strong>{fare != null ? `${Number(fare).toLocaleString("vi-VN")}đ` : "—"}</strong><small>{methodLabel[paymentMethod] || "Tiền mặt"}</small></span>
       </div>
       <ol className="cx-stepper" aria-label="Tiến trình chuyến đi">
         {steps.map((label, index) => <li key={label} className={index < current ? "is-done" : index === current ? "is-current" : ""}><i aria-hidden="true" /><span>{label}</span></li>)}
@@ -48,5 +55,14 @@ export default function RideTrackingPage() {
         <div className="cx-stars">{[1, 2, 3, 4, 5].map((star) => <button key={star} type="button" aria-label={`${star} sao`} onClick={() => nav(`/rating/${id}`)}>★</button>)}</div>
       </div>
     </section>
+    {confirming && <div className="cx-dialog-backdrop" onClick={() => !cancelling && setConfirming(false)}>
+      <div className="cx-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cx-cancel-title" onClick={(event) => event.stopPropagation()}>
+        <h2 id="cx-cancel-title">Hủy chuyến đi?</h2>
+        <p>Tài xế đang trên đường tới. Bạn có chắc muốn hủy chuyến này?</p>
+        {cancelError && <p className="cx-alert" role="alert">{cancelError}</p>}
+        <button type="button" className="cx-btn cx-btn--danger" disabled={cancelling || !canCancel} onClick={cancel}>{cancelling ? "Đang hủy…" : "Hủy chuyến"}</button>
+        <button type="button" className="cx-btn cx-btn--outline" disabled={cancelling} onClick={() => setConfirming(false)}>Giữ chuyến</button>
+      </div>
+    </div>}
   </main>;
 }

@@ -268,3 +268,11 @@ button.cx-list-item:hover { background: #f8faf9; }
   .cx-screen--tall .cx-sheet { min-height: 57%; max-height: 72%; }
 }
 .cx-shell h1, .cx-auth h1 { font-weight: 800; }
+.cx-pay-select { appearance: none; -webkit-appearance: none; margin: 0; border: 0; padding: 0; background: transparent; color: var(--cx-ink); font: inherit; cursor: pointer; }
+.cx-pay-select:focus-visible { outline: 2px solid var(--cx-mint); outline-offset: 2px; border-radius: 6px; }
+.cx-dialog-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: end center; padding: 16px; background: rgb(16 35 29 / 45%); }
+.cx-dialog { display: grid; gap: 12px; width: min(100%, 420px); border-radius: 20px; padding: 22px 18px calc(18px + env(safe-area-inset-bottom)); background: var(--cx-surface); box-shadow: var(--cx-shadow); }
+.cx-dialog h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+.cx-dialog p { margin: 0; color: var(--cx-muted); font-size: 14px; }
+.cx-btn--danger { background: var(--cx-danger); color: #fff; }
+.cx-btn--danger:not(:disabled):hover { background: #d9543f; }

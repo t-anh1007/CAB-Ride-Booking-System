@@ -10,8 +10,9 @@ export function BookingProvider({ children }) {
   const [drop, setDrop] = useState(null);
   const [quote, setQuote] = useState(null);
   const [booking, setBooking] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("cash");
 
-  const requestQuote = async (vehicleType, route = {}) => {
+  const fetchQuote = async (vehicleType, route = {}) => {
     const result = await client.post("/pricing/quote", {
       pickupLat: pickup.lat,
       pickupLng: pickup.lng,
@@ -22,7 +23,11 @@ export function BookingProvider({ children }) {
       distanceKm: route.distanceKm,
       durationMin: route.durationMin
     });
-    const next = { ...(result.data || result), vehicleType };
+    return { ...(result.data || result), vehicleType, receivedAt: Date.now() };
+  };
+
+  const requestQuote = async (vehicleType, route = {}) => {
+    const next = await fetchQuote(vehicleType, route);
     setQuote(next);
     return next;
   };
@@ -39,7 +44,7 @@ export function BookingProvider({ children }) {
     return result.data || result;
   };
 
-  return <C.Provider value={{ pickup, drop, quote, booking, setPickup, setDrop, requestQuote, confirmBooking }}>{children}</C.Provider>;
+  return <C.Provider value={{ pickup, drop, quote, booking, paymentMethod, setPickup, setDrop, setQuote, setPaymentMethod, fetchQuote, requestQuote, confirmBooking }}>{children}</C.Provider>;
 }
 
 export const useBooking = () => useContext(C);
