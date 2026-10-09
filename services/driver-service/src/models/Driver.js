@@ -50,6 +50,11 @@ const driverSchema = new mongoose.Schema(
         default: null
       }
     },
+    // Ride request outcomes reported by the driver app (used for acceptance rate)
+    requestStats: {
+      accepted: { type: Number, default: 0 },
+      rejected: { type: Number, default: 0 }
+    },
     updatedAt: {
       type: Date,
       default: () => new Date()
@@ -157,3 +162,16 @@ export async function listAvailableDrivers() {
   }
 }
 
+
+export async function incrementRequestStat(driverId, outcome) {
+  try {
+    return await DriverModel.findOneAndUpdate(
+      { driverId },
+      { $inc: { [`requestStats.${outcome}`]: 1 } },
+      { returnDocument: "after" }
+    );
+  } catch (error) {
+    console.error(`[incrementRequestStat] error:`, error.message);
+    return null;
+  }
+}

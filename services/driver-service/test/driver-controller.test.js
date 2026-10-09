@@ -37,6 +37,15 @@ before(async () => {
         drivers.set(driverId, next);
         return next;
       },
+      incrementRequestStat: async (driverId, outcome) => {
+        const current = drivers.get(driverId);
+        if (!current) return null;
+        const stats = { accepted: 0, rejected: 0, ...(current.requestStats ?? {}) };
+        stats[outcome] += 1;
+        const next = asDocument({ ...current, requestStats: stats });
+        drivers.set(driverId, next);
+        return next;
+      },
       updateDriverLocation: async (driverId, location) => {
         const current = drivers.get(driverId);
         if (!current) return null;
@@ -150,4 +159,35 @@ test('[TC23] online location update refreshes the corresponding supply zone', as
   assert.deepEqual(response.body.data.location, location);
   const key = `supply:zone:${ngeohash.encode(location.lat, location.lng, 5)}`;
   assert.ok(supplyZones.get(key)?.has('DRIVER-T7-1'));
+});
+
+test('request outcomes drive the acceptance rate', async () => {
+  const empty = await request('GET', '/DRIVER-T7-1/acceptance');
+  assert.equal(empty.status, 200);
+  assert.equal(empty.body.data.acceptanceRate, null);
+
+  await request('POST', '/DRIVER-T7-1/request-outcome', { outcome: 'accepted' });
+  await request('POST', '/DRIVER-T7-1/request-outcome', { outcome: 'accepted' });
+  await request('POST', '/DRIVER-T7-1/request-outcome', { outcome: 'accepted' });
+  const last = await request('POST', '/DRIVER-T7-1/request-outcome', { outcome: 'rejected' });
+
+  assert.equal(last.status, 200);
+  assert.deepEqual(last.body.data, { accepted: 3, rejected: 1, offered: 4, acceptanceRate: 0.75 });
+  const stats = await request('GET', '/DRIVER-T7-1/acceptance');
+  assert.equal(stats.body.data.acceptanceRate, 0.75);
+});
+
+test('request outcome rejects invalid outcome, unknown driver and other drivers', async () => {
+  const invalid = await request('POST', '/DRIVER-T7-1/request-outcome', { outcome: 'maybe' });
+  assert.equal(invalid.status, 400);
+
+  const missing = await request('POST', '/NOPE/request-outcome', { outcome: 'accepted' });
+  assert.equal(missing.status, 404);
+
+  const response = await fetch(`${baseUrl}/DRIVER-T7-1/request-outcome`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-auth-role': 'Driver', 'x-auth-subject-id': 'OTHER' },
+    body: JSON.stringify({ outcome: 'accepted' })
+  });
+  assert.equal(response.status, 403);
 });
