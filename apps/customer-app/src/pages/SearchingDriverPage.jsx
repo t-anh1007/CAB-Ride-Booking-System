@@ -23,7 +23,7 @@ export default function SearchingDriverPage() {
       <h1>Đang tìm tài xế</h1>
       <p className="cx-sub">Chúng tôi đang tìm tài xế gần bạn nhất</p>
       <CarIllustration />
-      <StatusChip tone={status === "connected" ? "success" : "warning"}>Realtime {status}</StatusChip>
+      <StatusChip tone={status === "open" ? "success" : "warning"}>Realtime {status}</StatusChip>
       <button type="button" className="cx-btn cx-btn--outline" onClick={cancel}>Hủy chuyến</button>
     </section>
   </main>;
