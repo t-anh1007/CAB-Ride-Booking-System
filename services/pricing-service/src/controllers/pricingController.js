@@ -3,7 +3,7 @@ import axios from 'axios';
 import { logger } from '../utils/logger.js';
 import { v4 as uuidv4 } from 'uuid';
 import { saveQuote } from '../utils/redis.js';
-import { latLngToZone } from '../utils/geohash.js';
+import { latLngToZone, surgeZoneGrid } from '../utils/geohash.js';
 import { evaluateSurge } from '../utils/surge-service.js';
 
 const formatResponse = (message, data, req) => ({
@@ -126,5 +126,31 @@ export const getSurgeStatus = async (req, res) => {
     } catch (error) {
         logger.error('Error fetching surge status', { requestId, error: error.message });
         return res.status(500).json({ success: false, message: 'Unable to fetch surge status' });
+    }
+};
+
+// Admin map: 3x3 geohash grid around SURGE_MAP_CENTER (default central HCMC),
+// each cell evaluated with the same evaluateSurge() used for quotes.
+const surgeLevel = (multiplier) => (multiplier >= 2 ? 3 : multiplier >= 1.5 ? 2 : multiplier > 1 ? 1 : 0);
+
+export const getSurgeZones = async (req, res) => {
+    const requestId = req.headers['x-request-id'] || uuidv4();
+    const [lat, lng] = String(process.env.SURGE_MAP_CENTER || '10.7769,106.7009').split(',').map(Number);
+    try {
+        const zones = await Promise.all(surgeZoneGrid(lat, lng).map(async (zone) => {
+            const surge = await evaluateSurge({ zoneId: zone.zoneId, requestId });
+            return {
+                ...zone,
+                supplyCount: surge.supplyCount ?? 0,
+                demandCount: surge.demandCount ?? 0,
+                surgeMultiplier: surge.surgeMultiplier,
+                level: surgeLevel(surge.surgeMultiplier),
+                surgeSource: surge.surgeSource
+            };
+        }));
+        return res.status(200).json(formatResponse('Surge zones fetched', { zones }, req));
+    } catch (error) {
+        logger.error('Error fetching surge zones', { requestId, error: error.message });
+        return res.status(500).json({ success: false, message: 'Unable to fetch surge zones' });
     }
 };

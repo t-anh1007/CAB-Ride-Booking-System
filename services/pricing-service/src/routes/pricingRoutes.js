@@ -1,7 +1,7 @@
 import express from 'express';
 import Joi from 'joi';
 import axios from 'axios';
-import { getQuote, getSurgeStatus } from '../controllers/pricingController.js';
+import { getQuote, getSurgeStatus, getSurgeZones } from '../controllers/pricingController.js';
 
 const router = express.Router();
 
@@ -33,5 +33,6 @@ const validateQuote = (req, res, next) => {
 
 router.post('/quote', validateQuote, getQuote);
 router.get('/surge', getSurgeStatus);
+router.get('/surge/zones', getSurgeZones);
 
 export default router;

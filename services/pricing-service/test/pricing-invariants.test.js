@@ -5,6 +5,7 @@ import { after, before, beforeEach, mock, test } from 'node:test';
 let delayMs = 0;
 let evaluateSurge;
 let getQuote;
+let getSurgeZones;
 let PricingRule;
 let server;
 let surgeReply;
@@ -29,7 +30,7 @@ before(async () => {
     }
   });
   ({ evaluateSurge } = await import('../src/utils/surge-service.js'));
-  ({ getQuote } = await import('../src/controllers/pricingController.js'));
+  ({ getQuote, getSurgeZones } = await import('../src/controllers/pricingController.js'));
   ({ default: PricingRule } = await import('../src/models/PricingRule.js'));
   mock.method(PricingRule, 'findOne', async () => ({
     vehicleType: 'standard',
@@ -147,3 +148,28 @@ function responseRecorder() {
     }
   };
 }
+
+test('surge zones return a 3x3 geohash grid with center, radius, counts and demand level', async () => {
+  surgeReply.demandCount = 5;
+  surgeReply.surgeMultiplier = 1.6;
+  const res = responseRecorder();
+  process.env.SURGE_PRICING_TIMEOUT_MS = '2000'; // 9 parallel calls; avoid the 20ms fallback path
+  try {
+    await getSurgeZones({ headers: { 'x-request-id': 'REQ-ZONES' } }, res);
+  } finally {
+    process.env.SURGE_PRICING_TIMEOUT_MS = '20';
+  }
+
+  assert.equal(res.statusCode, 200);
+  const { zones } = res.payload.data;
+  assert.equal(zones.length, 9);
+  assert.equal(zones[0].zoneId, 'w3gvk'); // geohash5 of default center 10.7769,106.7009
+  assert.equal(new Set(zones.map((z) => z.zoneId)).size, 9);
+  for (const zone of zones) {
+    assert.ok(Number.isFinite(zone.center.lat) && Number.isFinite(zone.center.lng));
+    assert.ok(zone.radiusM > 1000 && zone.radiusM < 3000);
+    assert.equal(zone.demandCount, 5);
+    assert.equal(zone.surgeMultiplier, 1.6);
+    assert.equal(zone.level, 2);
+  }
+});
