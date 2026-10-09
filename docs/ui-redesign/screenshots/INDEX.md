@@ -4,7 +4,7 @@ Captured 2026-10-09 with Playwright (Chromium) against local Vite dev servers (5
 
 Mobile = 390x844 viewport; desktop = 1440x900 (admin desktop is full-page).
 
-**Map tiles:** tile.openstreetmap.org and nominatim.openstreetmap.org are unreachable from this machine (DNS -> 127.0.0.1, direct IP connection reset), so map areas are plain grey. OSRM routing worked (route lines visible).
+**Map tiles:** every screenshot containing a map (customer 04, 07-13; driver 03-08; admin 03, 07) was re-shot the same day with real OpenStreetMap tiles (waited until all `.leaflet-tile` images had loaded). The customer pickup label now comes from Nominatim reverse-geocoding. OSRM route lines visible. Screens without a map (incl. customer 05/06 destination) are from the first capture.
 
 ## customer-app
 
@@ -16,8 +16,8 @@ Mobile = 390x844 viewport; desktop = 1440x900 (admin desktop is full-page).
 | customer-app/02-login-mobile.png | login | real API | Login, phone entered |
 | customer-app/03-login-otp-desktop.png | login-otp | real API | OTP verify step (real debug OTP) |
 | customer-app/03-login-otp-mobile.png | login-otp | real API | OTP verify step (real debug OTP) |
-| customer-app/04-home-pickup-desktop.png | home-pickup | real API | Home/pickup; pickup label "Điểm đón đã chọn" because reverse-geocode (Nominatim) is blocked |
-| customer-app/04-home-pickup-mobile.png | home-pickup | real API | Home/pickup; pickup label "Điểm đón đã chọn" because reverse-geocode (Nominatim) is blocked |
+| customer-app/04-home-pickup-desktop.png | home-pickup | real API | Home/pickup; pickup address from Nominatim reverse-geocode, OSM tiles |
+| customer-app/04-home-pickup-mobile.png | home-pickup | real API | Home/pickup; pickup address from Nominatim reverse-geocode, OSM tiles |
 | customer-app/05-destination-recent-desktop.png | destination-recent | real API | Destination, recent list (seeded in browser localStorage) |
 | customer-app/05-destination-recent-mobile.png | destination-recent | real API | Destination, recent list (seeded in browser localStorage) |
 | customer-app/06-destination-search-desktop.png | destination-search | real API | Destination search "Tân Sơn Nhất" (web-shared built-in fallback, Nominatim blocked) |
