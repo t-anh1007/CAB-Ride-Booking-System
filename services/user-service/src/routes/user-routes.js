@@ -65,6 +65,7 @@ export function createUserRoutes({ broker, repository, userDomainService }) {
         "GET /api/v1/users/:userId",
         "PATCH /api/v1/users/:userId",
         "GET /api/v1/users/:userId/summary",
+        "GET /api/v1/users/:userId/contact",
         "GET /api/v1/users/:userId/driver-profile",
         "PATCH /api/v1/users/:userId/driver-profile",
         "GET /api/v1/users/:userId/preferences",
@@ -130,6 +131,29 @@ export function createUserRoutes({ broker, repository, userDomainService }) {
     const summary = await userDomainService.getUserSummary(userId);
     auditSuccess(request);
     sendSuccess(response, request, 200, "User summary fetched", summary);
+  }));
+
+  // Least-privilege contact card so a driver can call the customer of a ride.
+  router.get(`${manifest.gatewayPath}/:userId/contact`, asyncHandler(async (request, response) => {
+    const { userId } = userIdParamSchema.parse(request.params);
+    setAuditEvent(request, {
+      action: "user.contact.read",
+      targetType: "user",
+      targetId: userId
+    });
+    const actor = ensureAuthenticatedActor(request);
+    const actorUserId = actor.userId || actor.subjectId;
+    if (!isAdminActor(actor) && actor.role !== "Driver" && actorUserId !== userId) {
+      throw new ApiError(403, "Only drivers, admins or the user can read contact info");
+    }
+    const user = await userDomainService.getUser(userId);
+    auditSuccess(request);
+    sendSuccess(response, request, 200, "User contact fetched", {
+      userId: user.userId,
+      name: user.displayName || user.fullName || "",
+      phone: user.phone || "",
+      avatarUrl: user.avatarUrl || ""
+    });
   }));
 
   router.get(`${manifest.gatewayPath}/:userId`, asyncHandler(async (request, response) => {
