@@ -9,8 +9,9 @@ const km = (ride) => { const v = ride.distanceKm ?? ride.distance_km; return typ
 export default function IncomingRequestPage() {
   const { state } = useLocation(); const nav = useNavigate(); const { client, user } = useAuth(); const ride = state?.ride || {}; const [remaining, setRemaining] = useState(15); const [error, setError] = useState(""); const hasRide = Boolean(ride.rideId || ride.id);
   useEffect(() => { const timer = setInterval(() => setRemaining((value) => Math.max(0, value - 1)), 1000); return () => clearInterval(timer); }, []);
-  const accept = async () => { try { const id = ride.rideId || ride.id; await client.post(`/rides/${id}/accept`, {}); nav(`/ride/${id}`); } catch (event) { setError(event.message); } };
-  const reject = async () => { try { const id = ride.rideId || ride.id; await client.post(`/rides/${id}/cancel`, { driverId: user?.id, reason: "Driver declined request" }); nav("/home"); } catch (event) { setError(event.message); } };
+  const reportOutcome = (outcome) => { client.post(`/drivers/${user?.id}/request-outcome`, { outcome }).catch(() => {}); };
+  const accept = async () => { try { const id = ride.rideId || ride.id; await client.post(`/rides/${id}/accept`, {}); reportOutcome("accepted"); nav(`/ride/${id}`); } catch (event) { setError(event.message); } };
+  const reject = async () => { try { const id = ride.rideId || ride.id; await client.post(`/rides/${id}/cancel`, { driverId: user?.id, reason: "Driver declined request" }); reportOutcome("rejected"); nav("/home"); } catch (event) { setError(event.message); } };
   const C = 2 * Math.PI * 34;
   return <main className="drv-map-page drv-incoming">
     <div className="drv-map drv-map--dim" aria-hidden="true"><BaseMap className="drv-leaflet" /></div>
