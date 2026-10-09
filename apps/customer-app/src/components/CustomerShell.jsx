@@ -11,7 +11,7 @@ export default function CustomerShell() {
     <nav className="cx-tabbar" aria-label="Điều hướng khách hàng">
       <NavLink to="/home" className={inBooking ? "active" : undefined}><Icon name="home" /><span>Trang chủ</span></NavLink>
       <NavLink to="/history"><Icon name="activity" /><span>Hoạt động</span></NavLink>
-      <button type="button" aria-disabled="true" title="Ưu đãi sắp ra mắt"><Icon name="gift" /><span>Ưu đãi</span></button>
+      <NavLink to="/promotions"><Icon name="gift" /><span>Ưu đãi</span></NavLink>
       <NavLink to="/profile"><Icon name="user" /><span>Tài khoản</span></NavLink>
     </nav>
   </div>;
