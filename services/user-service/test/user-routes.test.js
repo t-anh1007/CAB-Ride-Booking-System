@@ -93,3 +93,35 @@ test('PATCH valid profile update returns 200 and the updated profile', async () 
   assert.equal(response.body.data.bio, 'Updated profile');
   assert.equal(response.body.data.fullName, 'Existing User');
 });
+
+async function getContact(userId, role, actorId) {
+  const response = await fetch(`${baseUrl}/${userId}/contact`, {
+    headers: {
+      'x-auth-role': role,
+      'x-auth-subject-id': actorId,
+      'x-auth-user-id': actorId
+    }
+  });
+  return { status: response.status, body: await response.json() };
+}
+
+test('GET contact as driver returns only name/phone/avatar', async () => {
+  const response = await getContact(existingUserId, 'Driver', '55555555-5555-4555-8555-555555555555');
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(Object.keys(response.body.data).sort(), ['avatarUrl', 'name', 'phone', 'userId']);
+  assert.ok(response.body.data.name);
+  assert.ok(response.body.data.phone);
+});
+
+test('GET contact as another customer is forbidden', async () => {
+  const response = await getContact(existingUserId, 'Customer', missingUserId);
+
+  assert.equal(response.status, 403);
+});
+
+test('GET contact for missing user returns 404', async () => {
+  const response = await getContact(missingUserId, 'Driver', existingUserId);
+
+  assert.equal(response.status, 404);
+});

@@ -55,3 +55,19 @@ test("booking-create ignores load-test mode in production", () => {
     GATEWAY_LOAD_TEST_MODE: "true"
   }));
 });
+
+test("admin dashboard routes require Admin role and admin:all scope", () => {
+  const registry = createRouteRegistry({ env: {} });
+  for (const [originalUrl, key, serviceKey] of [
+    ["/api/v1/rides/recent?limit=5", "ride-recent", "ride-service"],
+    ["/api/v1/rides/stats?date=2026-10-09", "ride-stats", "ride-service"],
+    ["/api/v1/pricing/surge/zones", "pricing-surge-zones", "pricing-service"]
+  ]) {
+    const route = registry.resolve({ method: "GET", originalUrl });
+    assert.equal(route.key, key);
+    assert.equal(route.serviceKey, serviceKey);
+    assert.equal(route.authRequired, true);
+    assert.deepEqual(route.allowedRoles, ["Admin"]);
+    assert.deepEqual(route.requiredScopes, ["admin:all"]);
+  }
+});

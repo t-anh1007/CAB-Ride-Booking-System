@@ -6,7 +6,7 @@ import {
   DRIVER_STATUS,
   DRIVER_AVAILABILITY
 } from "../utils/index.js";
-import { findDriver, listAvailableDrivers, upsertDriver, updateDriverStatus, updateDriverLocation } from "../models/Driver.js";
+import { findDriver, listAvailableDrivers, upsertDriver, updateDriverStatus, updateDriverLocation, incrementRequestStat } from "../models/Driver.js";
 
 import { publishDriverEvent } from "../services/kafka-publisher.js";
 
@@ -221,3 +221,63 @@ export async function updateLocation(request, response) {
   }
 }
 
+
+export function buildAcceptanceStats(requestStats) {
+  const accepted = requestStats?.accepted ?? 0;
+  const rejected = requestStats?.rejected ?? 0;
+  const offered = accepted + rejected;
+  return { accepted, rejected, offered, acceptanceRate: offered > 0 ? accepted / offered : null };
+}
+
+// Driver app reports whether it accepted or rejected an offered ride request.
+export async function recordRequestOutcome(request, response) {
+  try {
+    const { driverId } = request.params;
+    const actorId = request.headers["x-auth-subject-id"] || request.headers["x-auth-user-id"];
+    const actorRole = String(request.headers["x-auth-role"] || "").toLowerCase();
+    if (actorId && actorRole !== "admin" && actorId !== driverId) {
+      return createErrorResponse(response, 403, "You can only report your own ride requests", request);
+    }
+
+    const outcome = request.body?.outcome;
+    if (outcome !== "accepted" && outcome !== "rejected") {
+      return createErrorResponse(response, 400, "outcome must be 'accepted' or 'rejected'", request);
+    }
+
+    const driver = await incrementRequestStat(driverId, outcome);
+    if (!driver) {
+      return createErrorResponse(response, 404, "Driver not found", request);
+    }
+
+    return response.json(
+      createResponse({
+        message: "Ride request outcome recorded",
+        data: buildAcceptanceStats(driver.requestStats),
+        request
+      })
+    );
+  } catch (error) {
+    console.error("[recordRequestOutcome] error:", error.message);
+    return createErrorResponse(response, 500, "Failed to record request outcome", request);
+  }
+}
+
+export async function getAcceptanceStats(request, response) {
+  try {
+    const driver = await findDriver(request.params.driverId);
+    if (!driver) {
+      return createErrorResponse(response, 404, "Driver not found", request);
+    }
+
+    return response.json(
+      createResponse({
+        message: "Acceptance stats fetched",
+        data: buildAcceptanceStats(driver.requestStats),
+        request
+      })
+    );
+  } catch (error) {
+    console.error("[getAcceptanceStats] error:", error.message);
+    return createErrorResponse(response, 500, "Failed to fetch acceptance stats", request);
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../providers/AuthProvider.jsx";
-import DataState from "../components/DataState.jsx";
+import { DemoNote, Icon, Loading, PageHead, Panel } from "../components/ui.jsx";
+import { demoUsers } from "../data/demo.js";
 
 export default function UsersPage() {
     const { client } = useAuth();
@@ -19,16 +20,20 @@ export default function UsersPage() {
         return () => { active = false; };
     }, [client]);
 
-    const filtered = useMemo(() => Array.isArray(rows)
-        ? rows.filter(row => JSON.stringify(row).toLowerCase().includes(query.toLowerCase()))
-        : [], [rows, query]);
+    const source = error ? demoUsers : rows;
+    const filtered = useMemo(() => Array.isArray(source)
+        ? source.filter(row => JSON.stringify(row).toLowerCase().includes(query.toLowerCase()))
+        : [], [source, query]);
 
-    return <section className="page cab-admin-page"><p className="cab-eyebrow">KHÁCH HÀNG</p><h1>Người dùng</h1>
-        <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm người dùng" aria-label="Tìm người dùng" />
-        {error && <DataState error={error} />}
-        {!error && !rows && <p className="muted">Đang tải…</p>}
-        {Array.isArray(rows) && <table className="table"><thead><tr><th>Id</th><th>Tên</th><th>Số điện thoại</th></tr></thead><tbody>
-            {filtered.map((row, index) => <tr key={row.userId || row.id || index}><td>{row.userId || row.id || "—"}</td><td>{row.fullName || row.name || "—"}</td><td>{row.phone || "—"}</td></tr>)}
-        </tbody></table>}
+    return <section className="ad-page">
+        <PageHead eyebrow="KHÁCH HÀNG" title="Người dùng">
+            <label className="ad-search"><Icon name="search" size={18} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm người dùng" aria-label="Tìm người dùng" /></label>
+        </PageHead>
+        {error && <DemoNote>Không tải được người dùng ({error}). Đang hiển thị dữ liệu minh họa.</DemoNote>}
+        {!error && !rows && <Loading />}
+        {Array.isArray(source) && <Panel><div className="ad-tablewrap"><table className="ad-table"><thead><tr><th>Mã</th><th>Tên</th><th>Số điện thoại</th></tr></thead><tbody>
+            {!filtered.length && <tr><td colSpan="3" className="ad-empty">Không tìm thấy người dùng phù hợp.</td></tr>}
+            {filtered.map((row, index) => { const name = row.fullName || row.name || "—"; return <tr key={row.userId || row.id || index}><td className="ad-mono">{row.userId || row.id || "—"}</td><td><span className="ad-person"><span className="ad-avatar ad-avatar--sm">{name[0]}</span>{name}</span></td><td>{row.phone || "—"}</td></tr>; })}
+        </tbody></table></div></Panel>}
     </section>;
 }

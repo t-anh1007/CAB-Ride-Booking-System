@@ -5,7 +5,9 @@ import {
   patchDriver,
   goOnline,
   goOffline,
-  updateLocation
+  updateLocation,
+  recordRequestOutcome,
+  getAcceptanceStats
 } from "../controllers/driverController.js";
 
 const router = express.Router();
@@ -16,6 +18,8 @@ router.patch("/:driverId", patchDriver);
 router.patch("/:driverId/location", updateLocation);
 router.post("/:driverId/go-online", goOnline);
 router.post("/:driverId/go-offline", goOffline);
+router.get("/:driverId/acceptance", getAcceptanceStats);
+router.post("/:driverId/request-outcome", recordRequestOutcome);
 
 // Internal Bootstrap Route (Called by auth-service)
 router.post("/internal/drivers/bootstrap", async (req, res) => {

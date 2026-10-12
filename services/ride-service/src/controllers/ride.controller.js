@@ -688,7 +688,7 @@ async function getStatistics(req, res) {
       throw createHttpError(403, 'Only admins can access ride statistics');
     }
 
-    const stats = await rideService.getRideStatistics();
+    const stats = await rideService.getRideStatistics(req.query.date);
 
     auditRideSuccess(req, {
       action: 'ride.stats.read',
@@ -724,6 +724,38 @@ async function getStatistics(req, res) {
         statusCode: error.statusCode || 500,
       })
     );
+  }
+}
+
+async function getRecentRides(req, res) {
+  try {
+    const requestId = generateRequestId();
+    const actor = requireAuthenticatedActor(req);
+
+    if (!isAdminActor(actor)) {
+      throw createHttpError(403, 'Only admins can list recent rides');
+    }
+
+    const items = (await rideService.listRecentRides(req.query.limit)).map((ride) => ({
+      rideId: ride.rideId,
+      createdAt: ride.createdAt,
+      pickup: ride.pickup,
+      destination: ride.destination,
+      fare: ride.priceSnapshot || 0,
+      status: ride.status
+    }));
+
+    auditRideSuccess(req, {
+      action: 'ride.list.recent',
+      targetType: 'ride',
+      targetId: 'recent',
+      metadata: { rideCount: items.length }
+    });
+
+    return res.json(createResponse({ success: true, message: 'Recent rides fetched', data: { items }, requestId }));
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    return res.status(statusCode).json(createResponse({ success: false, message: error.message || 'Internal server error', statusCode }));
   }
 }
 
@@ -830,5 +862,6 @@ export {
   completeRide,
   cancelRide,
   getStatistics,
+  getRecentRides,
   getDriverHistory,
 };

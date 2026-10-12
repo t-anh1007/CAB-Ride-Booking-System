@@ -1,0 +1,164 @@
+{
+ "run": {
+  "timings": {
+   "responseAverage": 145.7,
+   "responseMin": 3,
+   "responseMax": 928,
+   "responseSd": 277.1869585676787,
+   "dnsAverage": 0,
+   "dnsMin": 0,
+   "dnsMax": 0,
+   "dnsSd": 0,
+   "firstByteAverage": 0,
+   "firstByteMin": 0,
+   "firstByteMax": 0,
+   "firstByteSd": 0,
+   "started": 1790622816605,
+   "completed": 1790622818989
+  },
+  "executions": [
+   {
+    "item": {
+     "name": "customer login (OTP request+verify)"
+    },
+    "response": {
+     "code": 202
+    },
+    "assertions": [
+     {
+      "assertion": "OTP request accepted"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "customer verify -> token"
+    },
+    "response": {
+     "code": 200
+    },
+    "assertions": [
+     {
+      "assertion": "Customer login returns JWT"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC21 pricing quote"
+    },
+    "response": {
+     "code": 200
+    },
+    "assertions": [
+     {
+      "assertion": "Quote returns priced snapshot"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC11 quote missing field -> 400"
+    },
+    "response": {
+     "code": 422
+    },
+    "assertions": [
+     {
+      "assertion": "Missing field rejected (400/422)"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC31 idempotent booking (1st)"
+    },
+    "response": {
+     "code": 400
+    },
+    "assertions": [
+     {
+      "assertion": "Booking created",
+      "error": {
+       "message": "expected 400 to be one of [ 200, 201 ]"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC31 idempotent booking (replay, same key) -> same id"
+    },
+    "response": {
+     "code": 400
+    },
+    "assertions": [
+     {
+      "assertion": "Replay returns same bookingId (idempotent)",
+      "error": {
+       "message": "expected 400 to be one of [ 200, 201 ]"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC24.1 create payment"
+    },
+    "response": {
+     "code": 400
+    },
+    "assertions": [
+     {
+      "assertion": "Payment accepted",
+      "error": {
+       "message": "expected 400 to be one of [ 200, 201, 202 ]"
+      }
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC91 no token -> 401"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "Missing token rejected 401"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC92 tampered token -> 401"
+    },
+    "response": {
+     "code": 401
+    },
+    "assertions": [
+     {
+      "assertion": "Tampered token rejected 401"
+     }
+    ]
+   },
+   {
+    "item": {
+     "name": "TC95 customer calls admin API -> 403"
+    },
+    "response": {
+     "code": 404
+    },
+    "assertions": [
+     {
+      "assertion": "RBAC blocks non-admin (403)",
+      "error": {
+       "message": "expected 404 to be one of [ 401, 403 ]"
+      }
+     }
+    ]
+   }
+  ]
+ }
+}

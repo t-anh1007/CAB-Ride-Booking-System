@@ -178,6 +178,22 @@ export function createRouteRegistry({ env = process.env, upstreamTimeoutMs = 500
       rateLimit: createRatePolicy("ride-stats", 30, 60_000, "user-or-ip")
     },
     {
+      key: "ride-recent",
+      method: "GET",
+      path: "/api/v1/rides/recent",
+      allowedRoles: ["Admin"],
+      requiredScopes: ["admin:all"],
+      rateLimit: createRatePolicy("ride-recent", 30, 60_000, "user-or-ip")
+    },
+    {
+      key: "pricing-surge-zones",
+      method: "GET",
+      path: "/api/v1/pricing/surge/zones",
+      allowedRoles: ["Admin"],
+      requiredScopes: ["admin:all"],
+      rateLimit: createRatePolicy("pricing-surge-zones", 30, 60_000, "user-or-ip")
+    },
+    {
       key: "ride-location-update",
       method: "POST",
       pathRegex: /^\/api\/v1\/rides\/[^/]+\/location$/,
